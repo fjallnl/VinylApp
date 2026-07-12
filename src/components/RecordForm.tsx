@@ -62,6 +62,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [discogsCoverUrl, setDiscogsCoverUrl] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(record?.rating ?? 0);
   const [showScanner, setShowScanner] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -211,13 +212,40 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           </button>
           <button
             type="button"
-            onClick={() => setShowScanner(true)}
+            onClick={() => {
+              setScannerError(null);
+              setShowScanner(true);
+            }}
             className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors"
             title="Scan barcode"
           >
             <Barcode size={16} />
           </button>
         </div>
+        {scannerError && (
+          <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 mt-3 text-sm text-rose-200">
+            <p>{scannerError}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-xs"
+              >
+                Use photo upload instead
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScannerError(null);
+                  setShowScanner(true);
+                }}
+                className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-xs"
+              >
+                Retry scanner
+              </button>
+            </div>
+          </div>
+        )}
 
         {searchResults.length > 0 && (
           <div className="bg-zinc-800 rounded-lg divide-y divide-zinc-700 max-h-60 overflow-y-auto">
@@ -254,7 +282,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           >
             <X size={16} />
           </button>
-          <BarcodeScanner onDetected={handleBarcode} />
+          <BarcodeScanner onDetected={handleBarcode} onError={setScannerError} />
         </div>
       )}
 
