@@ -10,8 +10,10 @@ interface BarcodeScannerProps {
 
 export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
@@ -35,7 +37,7 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
       };
 
       try {
-        await reader.decodeFromConstraints(constraints, videoRef.current!, (result, err) => {
+        await reader.decodeFromConstraints(constraints, videoRef.current!, (result) => {
           if (result) {
             onDetected(result.getText());
           }
@@ -59,25 +61,66 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
     };
   }, [onDetected, onError]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageError(null);
+
+    const url = URL.createObjectURL(file);
+    try {
+      const reader = new BrowserMultiFormatReader();
+      const result = await reader.decodeFromImageUrl(url);
+      onDetected(result.getText());
+    } catch {
+      setImageError("No barcode found in image. Try a clearer photo.");
+    } finally {
+      URL.revokeObjectURL(url);
+      // reset so the same file can be re-selected
+      e.target.value = "";
+    }
+  };
+
   return (
-    <div className="relative rounded-xl overflow-hidden bg-zinc-900">
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        autoPlay
-        className="w-full aspect-video object-cover"
-      />
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {!cameraError ? (
-          <div className="w-64 h-32 border-2 border-amber-400 rounded-lg opacity-80" />
-        ) : (
-          <div className="bg-black/70 p-4 rounded-lg text-center">
-            <p className="text-xs text-red-300">{cameraError}</p>
-          </div>
-        )}
+    <div className="space-y-2">
+      <div className="relative rounded-xl overflow-hidden bg-zinc-900">
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          autoPlay
+          className="w-full aspect-video object-cover"
+        />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {!cameraError ? (
+            <div className="w-64 h-32 border-2 border-amber-400 rounded-lg opacity-80" />
+          ) : (
+            <div className="bg-black/70 p-4 rounded-lg text-center">
+              <p className="text-xs text-red-300">{cameraError}</p>
+            </div>
+          )}
+        </div>
+        <p className="text-center text-xs text-zinc-400 py-2">Point camera at barcode</p>
       </div>
-      <p className="text-center text-xs text-zinc-400 py-2">Point camera at barcode</p>
+
+      <div className="text-center">
+        <p className="text-xs text-zinc-500 mb-1">Scanner not working? Use a photo instead.</p>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="text-xs text-amber-400 underline underline-offset-2"
+        >
+          Take photo or upload image
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
+        {imageError && <p className="text-xs text-red-400 mt-1">{imageError}</p>}
+      </div>
     </div>
   );
 }
