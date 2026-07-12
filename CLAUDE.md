@@ -46,7 +46,7 @@ git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker co
 **NextAuth v5 + Edge runtime split:**
 - `src/lib/auth.config.ts` — edge-safe config only (no Node.js modules). Used by middleware.
 - `src/lib/auth.ts` — full config with PrismaAdapter, bcrypt, JWT strategy. Used by API routes and server components.
-- `src/middleware.ts` imports only from `auth.config.ts` to avoid crashing the edge runtime.
+- `src/proxy.ts` imports only from `auth.config.ts` to avoid crashing the edge runtime. (Next.js 16 renamed `middleware.ts` → `proxy.ts`)
 - Auth requires `trustHost: true` in the `NextAuth()` call (not just the env var) when behind a reverse proxy.
 
 **Image handling:**
@@ -94,7 +94,7 @@ src/
     CollectionView.tsx  # Toggle wrapper between grid and carousel
     BarcodeScanner.tsx  # @zxing/library camera barcode scanner
     Nav.tsx
-  middleware.ts     # Route protection using edge-safe auth config
+  proxy.ts          # Route protection using edge-safe auth config
 prisma/
   schema.prisma
 scripts/

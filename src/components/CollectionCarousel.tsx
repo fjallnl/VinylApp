@@ -122,6 +122,44 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
             transition: "opacity 380ms ease, transform 380ms ease",
           }}
         >
+
+            {/* Vinyl record — spinning, pulled out of sleeve */}
+            <div
+              key={`vinyl-${current.id}`}
+              className="vinyl-spin absolute z-10"
+              style={{
+                width: 120,
+                height: 120,
+                marginTop: "17%",
+                marginLeft: "36%",
+                filter: "drop-shadow(0 30px 50px rgba(0,0,0,0.8))",
+              }}
+            >
+              <Image
+                src="/lp-record-isolated-on-a-transparent-background-png.png"
+                alt="Vinyl record"
+                fill
+                unoptimized
+                className="object-contain"
+              />
+              {/* Album art as center label */}
+              {coverSrc && (
+                <div
+                  className="absolute rounded-full overflow-hidden"
+                  style={{ top: "35%", left: "35%", width: "30%", height: "30%" }}
+                >
+                  <Image
+                    src={coverSrc}
+                    alt=""
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </div>
+              )}
+                
+            </div>
+
           {/* Left info panel */}
           <div
             className="relative flex flex-col justify-between overflow-hidden"
@@ -212,14 +250,14 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
                 unoptimized
                 className="object-cover"
                 style={{
-                  filter: "blur(55px) brightness(0.22) saturate(2)",
-                  transform: "scale(1.15)",
+                  filter: "blur(1px) brightness(0.9)",
+                  transform: "scale(1.0)",
                   transition: "opacity 400ms ease",
                 }}
               />
             )}
 
-            {/* Album sleeve (behind, offset right) */}
+            {/* Album sleeve (behind, offset right) 
             {coverSrc && (
               <div
                 key={`sleeve-${current.id}`}
@@ -241,41 +279,8 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
                 />
               </div>
             )}
-
-            {/* Vinyl record — spinning, pulled out of sleeve */}
-            <div
-              key={`vinyl-${current.id}`}
-              className="vinyl-spin relative z-10"
-              style={{
-                width: 260,
-                height: 260,
-                marginRight: "12%",
-                filter: "drop-shadow(0 30px 50px rgba(0,0,0,0.8))",
-              }}
-            >
-              <Image
-                src="/vinyl-record.avif"
-                alt="Vinyl record"
-                fill
-                unoptimized
-                className="object-contain"
-              />
-              {/* Album art as center label */}
-              {coverSrc && (
-                <div
-                  className="absolute rounded-full overflow-hidden"
-                  style={{ top: "30%", left: "30%", width: "40%", height: "40%" }}
-                >
-                  <Image
-                    src={coverSrc}
-                    alt=""
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              )}
-            </div>
+*/}
+            
           </div>
         </div>
       )}
