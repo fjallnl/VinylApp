@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-VinylApp is a personal vinyl record collection manager built for self-hosting on a Proxmox LXC. It is a single-user app (one account per instance) with Discogs integration, MinIO cover image storage, a wantlist, star ratings, and condition grading. It is designed to be installable as a PWA on mobile.
+VinylApp is a personal vinyl record collection manager built for self-hosting on a Proxmox LXC. It is a multi-user app — each user has their own records and wantlist, and admins manage accounts at `/admin`. It has Discogs integration, MinIO cover image storage, a wantlist, star ratings, and condition grading. It is designed to be installable as a PWA on mobile.
 
 ## Commands
 
@@ -15,7 +15,7 @@ npm run dev          # Start dev server (Turbopack)
 npm run build        # prisma generate + next build
 npm run lint         # ESLint
 npm run db:push      # Push schema changes to DB without migrations (preferred over migrate dev)
-npm run create-user  # npx tsx scripts/create-user.ts <email> <password>
+npm run create-user  # npx tsx scripts/create-user.ts <email> <password> — creates/promotes an ADMIN user
 ```
 
 Local dev requires Docker containers for Postgres and MinIO:
@@ -49,6 +49,12 @@ git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker co
 - `src/proxy.ts` imports only from `auth.config.ts` to avoid crashing the edge runtime. (Next.js 16 renamed `middleware.ts` → `proxy.ts`)
 - Auth requires `trustHost: true` in the `NextAuth()` call (not just the env var) when behind a reverse proxy.
 
+**Users and roles:**
+- `User.role` is a Prisma enum (`ADMIN` | `USER`, default `USER`). Session types are augmented in `src/types/next-auth.d.ts`; the JWT type augmentation does not work in this next-auth beta, so `token.role`/`token.id` are cast where read.
+- The `jwt` callback re-reads the user from the DB on every session read: role changes apply immediately and deleted users are signed out (returns `null` to invalidate the JWT).
+- All record/wantlist queries must filter by `session.user.id`. Admin-only surfaces: `/admin` page (redirects non-admins) and `/api/admin/users*` routes (check `session.user.role !== "ADMIN"` → 403). Guards prevent self-deletion and demoting/deleting the last admin.
+- Self-registration is open (no invite code, no email verification yet) at `/register` + `POST /api/register`, creating `USER`-role accounts. Both are carved out as public routes in `auth.config.ts`'s `authorized` callback (`isRegisterPage`, `isApiRegister`) alongside `/login` and `/api/auth`. Email verification is a known gap — no SMTP/email-sending is configured in this repo.
+
 **Image handling:**
 - Cover images are stored in MinIO under keys like `1712345678901.jpg` (timestamp + ext, no path prefix).
 - `NEXT_PUBLIC_S3_PUBLIC_URL` (must be `NEXT_PUBLIC_` prefixed) is the public base URL for covers. `coverUrl(key)` in `src/lib/s3.ts` constructs the full URL.
@@ -71,14 +77,18 @@ src/
       record/[id]/  # Detail, edit, delete
       wantlist/     # Wantlist CRUD
       add/          # Add record form
+      admin/        # User management (admin role only)
     api/
       auth/         # NextAuth handler
+      admin/users/  # Admin-only user CRUD (list/create, role/password/delete)
+      register/     # Public self-registration endpoint (no email verification yet)
       records/      # CRUD + bulk-delete
       wantlist/     # CRUD
       discogs/      # search, release/[id], barcode — proxies Discogs REST API
       upload-url/   # Returns S3 presigned PUT URL for direct client upload
       proxy-image/  # Server-side proxy for Discogs images (avoids hotlink block)
     login/
+    register/       # Public self-registration page
   lib/
     auth.config.ts  # Edge-safe NextAuth config
     auth.ts         # Full NextAuth config
@@ -93,7 +103,10 @@ src/
     CollectionCarousel.tsx  # 3D coverflow carousel with blurred bg
     CollectionView.tsx  # Toggle wrapper between grid and carousel
     BarcodeScanner.tsx  # @zxing/library camera barcode scanner
-    Nav.tsx
+    UserAdmin.tsx       # Admin user management UI (add, role, password reset, delete)
+    Nav.tsx             # Shows Users link for admins only
+  types/
+    next-auth.d.ts  # Session type augmentation (user.id, user.role)
   proxy.ts          # Route protection using edge-safe auth config
 prisma/
   schema.prisma

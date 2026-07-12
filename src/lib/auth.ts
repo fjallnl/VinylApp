@@ -30,17 +30,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
         if (!valid) return null;
 
-        return { id: user.id, email: user.email, name: user.name };
+        return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) token.id = user.id;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        return token;
+      }
+      // Re-check the user on every session read so role changes apply
+      // immediately and deleted users lose their session (JWT strategy
+      // has no server-side session to revoke otherwise).
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (!dbUser) return null;
+        token.role = dbUser.role;
+      }
       return token;
     },
     session({ session, token }) {
       if (token.id) session.user.id = token.id as string;
+      if (token.role) session.user.role = token.role as "ADMIN" | "USER";
       return session;
     },
   },

@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import Link from "next/link";
 import { Disc3, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
@@ -70,6 +71,13 @@ export default function LoginPage() {
             Sign In
           </button>
         </form>
+
+        <p className="text-center text-xs text-zinc-500 mt-6">
+          Don&apos;t have an account?{" "}
+          <Link href="/register" className="text-amber-400 hover:underline">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );

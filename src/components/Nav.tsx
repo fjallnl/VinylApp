@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal } from "lucide-react";
+import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,9 @@ export default function Nav() {
 
   if (!session) return null;
 
+  const navLinks =
+    session.user?.role === "ADMIN" ? [...links, { href: "/admin", label: "Users", icon: Users }] : links;
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -30,7 +33,7 @@ export default function Nav() {
           <span className="font-bold text-sm tracking-widest uppercase">Vinyl</span>
         </Link>
 
-        {links.map(({ href, label, icon: Icon }) => (
+        {navLinks.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -60,7 +63,7 @@ export default function Nav() {
 
       {/* Mobile bottom bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-zinc-900 border-t border-zinc-800 flex items-center justify-around px-2 py-2">
-        {links.map(({ href, label, icon: Icon }) => (
+        {navLinks.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}

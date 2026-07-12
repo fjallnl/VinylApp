@@ -7,9 +7,13 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname.startsWith("/login");
+      const isRegisterPage = nextUrl.pathname.startsWith("/register");
       const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
-      if (isApiAuth) return true;
-      if (isLoginPage) return isLoggedIn ? Response.redirect(new URL("/collection", nextUrl)) : true;
+      const isApiRegister = nextUrl.pathname.startsWith("/api/register");
+      if (isApiAuth || isApiRegister) return true;
+      if (isLoginPage || isRegisterPage) {
+        return isLoggedIn ? Response.redirect(new URL("/collection", nextUrl)) : true;
+      }
       return isLoggedIn;
     },
   },
