@@ -452,14 +452,23 @@ export default function RecordForm({ record }: { record?: RecordData }) {
 
       <input type="hidden" {...register("discogsId")} />
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="w-full bg-amber-400 text-zinc-950 font-semibold py-3 rounded-xl hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-      >
-        {saving && <Loader2 size={16} className="animate-spin" />}
-        {record ? "Save changes" : "Add to collection"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex-1 bg-amber-400 text-zinc-950 font-semibold py-3 rounded-xl hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+        >
+          {saving && <Loader2 size={16} className="animate-spin" />}
+          {record ? "Save changes" : "Add to collection"}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex-1 bg-zinc-800 text-zinc-100 font-semibold py-3 rounded-xl hover:bg-zinc-700 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
