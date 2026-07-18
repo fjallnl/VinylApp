@@ -15,7 +15,7 @@ const schema = z.object({
   format: z.string().optional().nullable(),
   genre: z.array(z.string()).default([]),
   notes: z.string().optional().nullable(),
-  discogsId: z.string().optional().nullable(),
+  discogsId: z.string().optional().nullable().transform(v => v?.trim() || null),
   coverImage: z.string().optional().nullable(),
   discogsCoverUrl: z.string().url().optional().nullable(),
   rating: z.number().int().min(1).max(5).optional().nullable(),
