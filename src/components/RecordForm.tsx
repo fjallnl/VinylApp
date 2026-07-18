@@ -64,6 +64,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [showScanner, setShowScanner] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -149,6 +150,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
 
   async function onSubmit(values: FormValues) {
     setSaving(true);
+    setSaveError(null);
     try {
       let coverKey: string | undefined;
 
@@ -168,8 +170,10 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
         genre: values.genre ? values.genre.split(",").map((s) => s.trim()).filter(Boolean) : [],
         tracks,
-        coverImage: coverKey ?? record?.coverImage,
+        coverImage: coverKey ?? record?.coverImage || null,
         discogsCoverUrl: coverKey ? null : discogsCoverUrl,
+        // Convert empty strings to null for unique fields
+        discogsId: values.discogsId?.trim() || null,
       };
 
       const url = record ? `/api/records/${record.id}` : "/api/records";
@@ -180,7 +184,13 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const errorMsg = errorData.error ? JSON.stringify(errorData.error) : `HTTP ${res.status}`;
+        console.error("Save failed:", errorMsg);
+        setSaveError(errorMsg);
+        throw new Error("Save failed");
+      }
       const saved = await res.json();
       router.push(`/record/${saved.id}`);
       router.refresh();
@@ -191,6 +201,12 @@ export default function RecordForm({ record }: { record?: RecordData }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {saveError && (
+        <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 text-sm text-rose-200">
+          <p className="font-medium">Failed to save: {saveError}</p>
+        </div>
+      )}
+
       {/* Discogs search */}
       <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
         <p className="text-sm font-medium text-zinc-300">Search Discogs to auto-fill</p>
