@@ -184,7 +184,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
         genre: values.genre ? values.genre.split(",").map((s) => s.trim()).filter(Boolean) : [],
         tracks,
-        coverImage: coverKey ?? record?.coverImage || null,
+        coverImage: coverKey ?? record?.coverImage ?? null,
         discogsCoverUrl: coverKey ? null : discogsCoverUrl,
         // Convert empty strings to null for unique fields
         discogsId: values.discogsId?.trim() || null,
@@ -444,9 +444,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           <button
             type="button"
             onClick={() => {
-              const nextSide = getNextSide(tracks);
-              const nextNumber = getNextTrackNumber(tracks, nextSide);
-              setTracks([...tracks, { position: `${nextSide}${nextNumber}`, title: "", duration: "" }]);
+              // Add track should respect the current side (last track's side)
+              const last = tracks[tracks.length - 1];
+              const currentSide = last?.position?.[0]?.toUpperCase() || "A";
+              const nextNumber = getNextTrackNumber(tracks, currentSide);
+              setTracks([...tracks, { position: `${currentSide}${nextNumber}`, title: "", duration: "" }]);
             }}
             className="text-xs text-amber-400 hover:text-amber-300"
           >
@@ -464,10 +466,27 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                     key={side}
                     type="button"
                     onClick={() => {
+                      const currentSideLocal = track.position?.[0]?.toUpperCase() || "A";
                       const otherTracksOnNewSide = tracks.filter(
                         (t, idx) => idx !== i && t.position?.[0]?.toUpperCase() === side
                       );
-                      const newNumber = otherTracksOnNewSide.length + 1;
+                      let newNumber: number;
+                      if (currentSideLocal === side) {
+                        // If clicking the active side button, advance to the next side and start at 1
+                        const sideOrder = ["A", "B", "C", "D"];
+                        const currentIndex = sideOrder.indexOf(currentSideLocal);
+                        const nextSide = currentIndex < sideOrder.length - 1 ? sideOrder[currentIndex + 1] : currentSideLocal;
+                        newNumber = 1;
+                        // update to nextSide (not the clicked 'side' since clicked equals current)
+                        setTracks(
+                          tracks.map((t, j) =>
+                            j === i ? { ...t, position: `${nextSide}${newNumber}` } : t
+                          )
+                        );
+                        return;
+                      }
+                      // If clicking a different side, place at the end of that side
+                      newNumber = otherTracksOnNewSide.length + 1;
                       setTracks(
                         tracks.map((t, j) =>
                           j === i ? { ...t, position: `${side}${newNumber}` } : t
