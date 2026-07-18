@@ -47,6 +47,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
   }
 
+  // Ensure genres exist
+  if (Array.isArray(data.genre)) {
+    await Promise.all((data.genre as string[]).map(async (g) => {
+      if (!g) return;
+      await prisma.genre.upsert({ where: { name: g }, create: { name: g }, update: {} });
+    }));
+  }
+
   const record = await prisma.record.update({
     where: { id },
     data: {

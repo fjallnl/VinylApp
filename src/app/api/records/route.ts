@@ -46,6 +46,14 @@ export async function POST(req: Request) {
     }
   }
 
+  // Ensure all genres exist in the genres table (create missing)
+  if (Array.isArray(data.genre)) {
+    await Promise.all((data.genre as string[]).map(async (g) => {
+      if (!g) return;
+      await prisma.genre.upsert({ where: { name: g }, create: { name: g }, update: {} });
+    }));
+  }
+
   const record = await prisma.record.create({
     data: {
       ...data,

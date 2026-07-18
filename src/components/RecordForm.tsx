@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +67,54 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [genreTags, setGenreTags] = useState<string[]>(record?.genre ?? []);
+  const [genreInput, setGenreInput] = useState("");
+  const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
+
+  useEffect(() => {
+    // keep hidden form value in sync
+    setValue("genre", genreTags.join(", "));
+  }, [genreTags, setValue]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchSuggestions = async () => {
+      const q = genreInput.trim();
+      if (!q) { setGenreSuggestions([]); return; }
+      const res = await fetch(`/api/genres?q=${encodeURIComponent(q)}`);
+      const data = await res.json().catch(() => []);
+      if (!mounted) return;
+      const names = (data || []).map((g: any) => g.name).filter(Boolean).filter((n: string) => !genreTags.includes(n));
+      setGenreSuggestions(names);
+    };
+    const t = setTimeout(fetchSuggestions, 200);
+    return () => { mounted = false; clearTimeout(t); };
+  }, [genreInput, genreTags]);
+
+  function addTag(tag: string) {
+    if (!tag) return;
+    if (genreTags.includes(tag)) return;
+    setGenreTags((prev) => [...prev, tag]);
+  }
+
+  function removeTag(tag: string) {
+    setGenreTags((prev) => prev.filter((t) => t !== tag));
+  }
+
+  function handleGenreKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const val = genreInput.trim().replace(/,$/, "");
+      if (val) {
+        addTag(val);
+        setGenreInput("");
+        setGenreSuggestions([]);
+      }
+    } else if (e.key === "Backspace" && !genreInput && genreTags.length > 0) {
+      setGenreTags((prev) => prev.slice(0, -1));
+    }
+  }
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -182,7 +230,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         year: values.year ? Number(values.year) : null,
         rating: rating || null,
         purchasePrice: values.purchasePrice ? Number(values.purchasePrice) : null,
-        genre: values.genre ? values.genre.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        genre: genreTags.length ? genreTags : (values.genre ? values.genre.split(",").map((s) => s.trim()).filter(Boolean) : []),
         tracks,
         coverImage: coverKey ?? record?.coverImage ?? null,
         discogsCoverUrl: coverKey ? null : discogsCoverUrl,
@@ -388,8 +436,46 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         <Field label="Format">
           <input {...register("format")} placeholder="LP, 7&quot;, 12&quot;…" className={inputCls} />
         </Field>
-        <Field label="Genre / Style" hint="Comma-separated">
-          <input {...register("genre")} placeholder="Rock, Alternative Rock" className={inputCls} />
+        <Field label="Genre / Style" hint="Add tags — autocomplete">
+          <div>
+            <div className="flex gap-2 flex-wrap">
+              {/** tags */}
+              {genreTags.map((t) => (
+                <span key={t} className="bg-zinc-800 text-zinc-400 text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                  <span className="text-sm">{t}</span>
+                  <button type="button" onClick={() => removeTag(t)} className="text-zinc-500 hover:text-zinc-300">
+                    <X size={14} />
+                  </button>
+                </span>
+              ))}
+
+              <input
+                value={genreInput}
+                onChange={(e) => setGenreInput(e.target.value)}
+                onKeyDown={(e) => handleGenreKeyDown(e)}
+                placeholder="Add genre…"
+                className={cn(inputCls, "w-48")}
+              />
+            </div>
+
+            {genreSuggestions.length > 0 && (
+              <div className="bg-zinc-800 rounded-lg mt-2 divide-y divide-zinc-700 max-h-40 overflow-y-auto">
+                {genreSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => { addTag(s); setGenreInput(""); setGenreSuggestions([]); }}
+                    className="w-full text-left px-3 py-2 hover:bg-zinc-700"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* keep form value in sync */}
+            <input type="hidden" {...register("genre")} />
+          </div>
         </Field>
       </div>
 
