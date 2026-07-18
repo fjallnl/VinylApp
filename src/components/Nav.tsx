@@ -21,8 +21,13 @@ export default function Nav() {
 
   if (!session) return null;
 
-  const navLinks =
-    session.user?.role === "ADMIN" ? [...links, { href: "/admin", label: "Users", icon: Users }] : links;
+  const isAdmin = session.user?.role === "ADMIN";
+  const [adminOpen, setAdminOpen] = useState(true);
+
+  const adminChildren = [
+    { href: "/admin#users", label: "Users", icon: Users },
+    { href: "/admin#genres", label: "Genres", icon: Disc3 },
+  ];
 
   return (
     <>
@@ -33,7 +38,7 @@ export default function Nav() {
           <span className="font-bold text-sm tracking-widest uppercase">Vinyl</span>
         </Link>
 
-        {navLinks.map(({ href, label, icon: Icon }) => (
+        {links.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -49,6 +54,39 @@ export default function Nav() {
           </Link>
         ))}
 
+        {isAdmin && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setAdminOpen((s) => !s)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 w-full"
+            >
+              <Users size={16} />
+              <span className="flex-1 text-left">Admin</span>
+              <svg className={cn("w-4 h-4 transition-transform", adminOpen ? "rotate-180" : "rotate-0")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+
+            {adminOpen && (
+              <div className="ml-4 mt-2 space-y-1">
+                {adminChildren.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs uppercase tracking-widest",
+                      pathname.startsWith(href) ? "bg-amber-400/10 text-amber-400" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                    )}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+        )}
+
         <div className="mt-auto pt-4 border-t border-zinc-800">
           <p className="text-xs text-zinc-500 px-3 mb-2 truncate">{session.user?.email}</p>
           <button
@@ -63,7 +101,7 @@ export default function Nav() {
 
       {/* Mobile bottom bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-zinc-900 border-t border-zinc-800 flex items-center justify-around px-2 py-2">
-        {navLinks.map(({ href, label, icon: Icon }) => (
+        {(isAdmin ? [...links, { href: "/admin", label: "Admin", icon: Users }] : links).map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
