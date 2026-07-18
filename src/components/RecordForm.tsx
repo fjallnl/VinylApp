@@ -148,6 +148,20 @@ export default function RecordForm({ record }: { record?: RecordData }) {
     setDiscogsCoverUrl(null);
   }
 
+  function getNextSide(trackList: Track[]): string {
+    if (trackList.length === 0) return "A";
+    const sides = trackList.map((t) => t.position?.[0]?.toUpperCase() || "A");
+    const lastSide = sides[sides.length - 1];
+    const sideOrder = ["A", "B", "C", "D"];
+    const currentIndex = sideOrder.indexOf(lastSide);
+    return currentIndex < 3 ? sideOrder[currentIndex + 1] : lastSide;
+  }
+
+  function getNextTrackNumber(trackList: Track[], side: string): number {
+    const tracksOnSide = trackList.filter((t) => t.position?.[0]?.toUpperCase() === side);
+    return tracksOnSide.length + 1;
+  }
+
   async function onSubmit(values: FormValues) {
     setSaving(true);
     setSaveError(null);
@@ -429,41 +443,76 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           <p className="text-sm font-medium text-zinc-300">Tracklist</p>
           <button
             type="button"
-            onClick={() => setTracks([...tracks, { position: "", title: "", duration: "" }])}
+            onClick={() => {
+              const nextSide = getNextSide(tracks);
+              const nextNumber = getNextTrackNumber(tracks, nextSide);
+              setTracks([...tracks, { position: `${nextSide}${nextNumber}`, title: "", duration: "" }]);
+            }}
             className="text-xs text-amber-400 hover:text-amber-300"
           >
             + Add track
           </button>
         </div>
-        {tracks.map((track, i) => (
-          <div key={i} className="flex gap-2 mb-2 items-center">
-            <input
-              value={track.position}
-              onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, position: e.target.value } : t))}
-              placeholder="A1"
-              className={cn(inputCls, "w-14 shrink-0")}
-            />
-            <input
-              value={track.title}
-              onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, title: e.target.value } : t))}
-              placeholder="Track title"
-              className={cn(inputCls, "flex-1")}
-            />
-            <input
-              value={track.duration}
-              onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, duration: e.target.value } : t))}
-              placeholder="3:45"
-              className={cn(inputCls, "w-16 shrink-0")}
-            />
-            <button
-              type="button"
-              onClick={() => setTracks(tracks.filter((_, j) => j !== i))}
-              className="text-zinc-500 hover:text-red-400"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        ))}
+        {tracks.map((track, i) => {
+          const currentSide = track.position?.[0]?.toUpperCase() || "A";
+          const tracksOnSide = tracks.filter((t) => t.position?.[0]?.toUpperCase() === currentSide).length;
+          return (
+            <div key={i} className="flex gap-2 mb-2 items-center">
+              <div className="flex gap-1 shrink-0">
+                {["A", "B", "C", "D"].map((side) => (
+                  <button
+                    key={side}
+                    type="button"
+                    onClick={() => {
+                      const otherTracksOnNewSide = tracks.filter(
+                        (t, idx) => idx !== i && t.position?.[0]?.toUpperCase() === side
+                      );
+                      const newNumber = otherTracksOnNewSide.length + 1;
+                      setTracks(
+                        tracks.map((t, j) =>
+                          j === i ? { ...t, position: `${side}${newNumber}` } : t
+                        )
+                      );
+                    }}
+                    className={cn(
+                      "px-2 py-1 rounded text-xs font-medium transition-colors",
+                      currentSide === side
+                        ? "bg-amber-400 text-zinc-950"
+                        : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                    )}
+                  >
+                    {side}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={track.position}
+                onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, position: e.target.value } : t))}
+                placeholder="A1"
+                className={cn(inputCls, "w-14 shrink-0")}
+              />
+              <input
+                value={track.title}
+                onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, title: e.target.value } : t))}
+                placeholder="Track title"
+                className={cn(inputCls, "flex-1")}
+              />
+              <input
+                value={track.duration}
+                onChange={(e) => setTracks(tracks.map((t, j) => j === i ? { ...t, duration: e.target.value } : t))}
+                placeholder="3:45"
+                className={cn(inputCls, "w-16 shrink-0")}
+              />
+              <button
+                type="button"
+                onClick={() => setTracks(tracks.filter((_, j) => j !== i))}
+                className="text-zinc-500 hover:text-red-400"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <input type="hidden" {...register("discogsId")} />
