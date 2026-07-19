@@ -73,11 +73,6 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [genreSuggestions, setGenreSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    // keep hidden form value in sync
-    setValue("genre", genreTags.join(", "));
-  }, [genreTags, setValue]);
-
-  useEffect(() => {
     let mounted = true;
     const fetchSuggestions = async () => {
       const q = genreInput.trim();
@@ -134,6 +129,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       purchasePrice: record?.purchasePrice?.toString() ?? "",
     },
   });
+
+  useEffect(() => {
+    // keep hidden form value in sync
+    setValue("genre", genreTags.join(", "));
+  }, [genreTags, setValue]);
 
   async function searchDiscogs(query: string) {
     if (!query.trim()) return;

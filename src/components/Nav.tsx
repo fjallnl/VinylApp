@@ -18,11 +18,11 @@ export default function Nav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(true);
 
   if (!session) return null;
 
   const isAdmin = session.user?.role === "ADMIN";
-  const [adminOpen, setAdminOpen] = useState(true);
 
   const adminChildren = [
     { href: "/admin#users", label: "Users", icon: Users },
