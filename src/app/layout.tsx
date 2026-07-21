@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Josefin_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
 
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
@@ -21,10 +22,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const themePreference = session?.user?.themePreference ?? "system";
+
   return (
-    <html lang="en" className={`${josefinSans.variable} h-full`}>
-      <body className="min-h-full bg-zinc-950 text-zinc-100 antialiased">
+    <html lang="en" data-theme={themePreference} className={`${josefinSans.variable} h-full`}>
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] antialiased">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

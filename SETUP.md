@@ -1,13 +1,84 @@
-# Vinyl App — Proxmox LXC Setup Guide
+# Vinyl App Setup Guide
 
-## 1. Create Debian LXC in Proxmox
+This guide describes two workflows:
+
+- Development environment
+- Production deployment on Proxmox LXC
+
+---
+
+## Development environment
+
+Use this section when you want to run the app locally for development, testing, and code changes.
+
+### 1. Clone the repo and install dependencies
+
+```bash
+git clone <repo-url> vinylapp
+cd vinylapp
+npm install
+```
+
+### 2. Prepare local environment
+
+```bash
+cp .env.example .env
+# Edit .env to set:
+# NEXTAUTH_URL=http://localhost:3000
+# NEXTAUTH_SECRET=<secure-random-value>
+# NEXT_PUBLIC_S3_PUBLIC_URL=http://localhost:9000/vinyl-covers
+```
+
+Generate a secure secret:
+
+```bash
+openssl rand -base64 32
+```
+
+### 3. Start development services
+
+This project uses PostgreSQL and MinIO in Docker.
+
+```bash
+docker compose up -d
+```
+
+Wait until the containers are ready.
+
+### 4. Create the database and run locally
+
+```bash
+docker compose exec app npx prisma db push
+npm run dev
+```
+
+### 5. Create an initial user
+
+```bash
+docker compose exec app npx tsx scripts/create-user.ts you@example.com yourpassword
+```
+
+### 6. Useful commands
+
+- `npm run dev` — start Next.js in development mode
+- `npm run build` — compile the app for production
+- `npm run lint` — run ESLint
+- `npm run db:push` — push Prisma schema changes
+
+---
+
+## Production deployment
+
+Use this section to deploy the app into a Proxmox Debian LXC and expose it via Nginx.
+
+### 1. Create Debian LXC in Proxmox
 
 - Template: Debian 12 (Bookworm)
 - RAM: 2048 MB (4096 recommended)
 - Disk: 30 GB
 - Features: `keyctl=1,nesting=1` (required for Docker)
 
-## 2. Install Docker in the LXC
+### 2. Install Docker in the LXC
 
 ```bash
 apt update && apt install -y curl
@@ -15,67 +86,74 @@ curl -fsSL https://get.docker.com | sh
 systemctl enable docker
 ```
 
-## 3. Deploy the app
+### 3. Copy project files to the LXC
+
+From your workstation:
 
 ```bash
-# Copy project files to the LXC (from your Windows machine)
-scp -r . root@192.168.2.164:/opt/vinyl-app
+scp -r . root@<lxc-ip>:/opt/vinyl-app
+```
 
-# On the LXC
+On the LXC:
+
+```bash
 cd /opt/vinyl-app
-
-# Create .env file
 cp .env.example .env
-nano .env   # Fill in NEXTAUTH_URL, NEXTAUTH_SECRET, S3_PUBLIC_URL
+nano .env
+```
 
-# Generate a secure secret
-openssl rand -base64 32   # paste into NEXTAUTH_SECRET
+Fill in production values for:
 
-# Start everything
-docker compose up -d
+- `NEXTAUTH_URL` (your app URL)
+- `NEXTAUTH_SECRET` (secure random secret)
+- `NEXT_PUBLIC_S3_PUBLIC_URL` (public MinIO cover URL)
 
-# Run database migrations
+### 4. Start production services
+
+```bash
+docker compose up -d --build
+```
+
+### 5. Run Prisma migrations
+
+```bash
 docker compose exec app npx prisma migrate deploy
+```
 
-# Create your user account
+### 6. Create an admin user
+
+```bash
 docker compose exec app npx tsx scripts/create-user.ts you@example.com yourpassword
 ```
 
-## 4. Set up Nginx reverse proxy
+### 7. Set up Nginx reverse proxy
 
 ```bash
 apt install -y nginx certbot python3-certbot-nginx
-
-# Copy config
 cp nginx/vinyl-app.conf /etc/nginx/sites-available/vinyl-app
 ln -s /etc/nginx/sites-available/vinyl-app /etc/nginx/sites-enabled/
-# Edit: replace your-domain.com with your actual domain
+# Edit the config and replace your-domain.com with your real domain
 nano /etc/nginx/sites-available/vinyl-app
-
 nginx -t && systemctl reload nginx
-
-# Get SSL certificate
 certbot --nginx -d your-domain.com
 ```
 
-## 5. Install as PWA on your phone
+### 8. Configure MinIO
 
-1. Open the site in Safari (iOS) or Chrome (Android)
-2. Tap Share → "Add to Home Screen"
-3. The app installs like a native app with camera access
+- Admin console: `http://<lxc-ip>:9001`
+- Default credentials: `minioadmin / minioadmin`
 
-## MinIO admin console
+> Change the default MinIO credentials in production.
 
-- URL: http://<lxc-ip>:9001
-- User: minioadmin / minioadmin  ← **change this in production!**
+Create bucket `vinyl-covers` and configure it for public read access if you want cover images to be directly accessible.
 
-Create bucket `vinyl-covers` and set it to public read if you want cover images accessible without signed URLs.
+---
 
-## Updating
+## Updating production
 
 ```bash
 cd /opt/vinyl-app
-git pull   # or copy new files
+git pull
 docker compose up -d --build
 docker compose exec app npx prisma migrate deploy
 ```

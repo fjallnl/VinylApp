@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users } from "lucide-react";
+import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users, Settings } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const links = [
   { href: "/collection", label: "Collection", icon: Disc3 },
   { href: "/showcase", label: "Showcase", icon: GalleryHorizontal },
   { href: "/wantlist", label: "Wantlist", icon: Heart },
+  { href: "/settings", label: "Settings", icon: Settings },
   { href: "/add", label: "Add Record", icon: PlusCircle },
 ];
 
