@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users, Settings } from "lucide-react";
+import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users, Settings, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const links = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/collection", label: "Collection", icon: Disc3 },
   { href: "/showcase", label: "Showcase", icon: GalleryHorizontal },
   { href: "/wantlist", label: "Wantlist", icon: Heart },
@@ -34,7 +35,7 @@ export default function Nav() {
     <>
       {/* Desktop sidebar */}
       <nav className="hidden md:flex flex-col w-56 shrink-0 bg-zinc-900 border-r border-zinc-800 min-h-screen p-4 gap-1">
-        <Link href="/collection" className="flex items-center gap-2 px-2 py-3 mb-4">
+        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-3 mb-4">
           <Disc3 size={22} className="text-amber-400" />
           <span className="font-bold text-sm tracking-widest uppercase">Vinyl</span>
         </Link>
