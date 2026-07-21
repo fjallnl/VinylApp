@@ -22,7 +22,31 @@ export default async function AdminPage() {
     orderBy: { createdAt: "asc" },
   });
 
-  const genres = await prisma.genre.findMany({ orderBy: { name: "asc" } });
+  // Get genres from Genre table
+  const genreTableEntries = await prisma.genre.findMany({ orderBy: { name: "asc" } });
+
+  // Get all distinct genres used in records
+  const records = await prisma.record.findMany({
+    select: { genre: true },
+  });
+  
+  const genresFromRecords = new Set<string>();
+  records.forEach((r) => {
+    r.genre.forEach((g) => {
+      if (g && g.trim()) genresFromRecords.add(g.trim());
+    });
+  });
+
+  // Merge: prefer Genre table entries (they have IDs), add record genres without entries
+  const genreMap = new Map<string, { id: string; name: string }>();
+  genreTableEntries.forEach((g) => genreMap.set(g.name, { id: g.id, name: g.name }));
+  genresFromRecords.forEach((name) => {
+    if (!genreMap.has(name)) {
+      genreMap.set(name, { id: `temp-${name}`, name });
+    }
+  });
+
+  const genres = Array.from(genreMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <>

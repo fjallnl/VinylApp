@@ -53,16 +53,27 @@ export default function GenresAdmin({ genres }: { genres: { id: string; name: st
       </div>
 
       <div className="space-y-2">
-        {genres.map((g) => (
-          <div key={g.id} className="bg-zinc-800/50 border border-zinc-800 rounded-xl p-3 flex items-center justify-between">
-            <div className="text-sm font-medium">{g.name}</div>
-            <div>
-              <button onClick={() => deleteGenre(g.id)} disabled={busyId === g.id} className="text-zinc-400 hover:text-red-400">
-                <Trash2 />
-              </button>
+        {genres.map((g) => {
+          const isTempId = g.id.startsWith("temp-");
+          return (
+            <div key={g.id} className="bg-zinc-800/50 border border-zinc-800 rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">{g.name}</div>
+                {isTempId && <div className="text-xs text-zinc-500 mt-1">In use by records</div>}
+              </div>
+              <div>
+                <button
+                  onClick={() => deleteGenre(g.id)}
+                  disabled={busyId === g.id || isTempId}
+                  className={`${isTempId ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-red-400"}`}
+                  title={isTempId ? "Cannot delete genres in use by records" : "Delete genre"}
+                >
+                  <Trash2 />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
