@@ -16,6 +16,7 @@ export async function GET(req: Request) {
         id: r.id,
         title: r.title,
         year: r.year,
+        catalogNumber: r.catno,
         thumb: r.thumb,
       })),
     });
