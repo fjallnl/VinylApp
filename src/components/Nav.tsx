@@ -12,7 +12,6 @@ const links = [
   { href: "/collection", label: "Collection", icon: Disc3 },
   { href: "/showcase", label: "Showcase", icon: GalleryHorizontal },
   { href: "/wantlist", label: "Wantlist", icon: Heart },
-  { href: "/settings", label: "Settings", icon: Settings },
   { href: "/add", label: "Add Record", icon: PlusCircle },
 ];
 
@@ -20,14 +19,11 @@ export default function Nav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopUserOpen, setDesktopUserOpen] = useState(false);
   const [mobileUserOpen, setMobileUserOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("vinyl.nav.desktopCollapsed") === "1";
   });
-  const [adminOpen, setAdminOpen] = useState(true);
-  const desktopUserMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileUserMenuRef = useRef<HTMLDivElement | null>(null);
 
   const isAdmin = session?.user?.role === "ADMIN";
@@ -37,28 +33,19 @@ export default function Nav() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMobileOpen(false);
-        setDesktopUserOpen(false);
         setMobileUserOpen(false);
       }
     };
 
-    if (!mobileOpen && !desktopUserOpen && !mobileUserOpen) return;
+    if (!mobileOpen && !mobileUserOpen) return;
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileOpen, desktopUserOpen, mobileUserOpen]);
+  }, [mobileOpen, mobileUserOpen]);
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
-
-      if (
-        desktopUserOpen &&
-        desktopUserMenuRef.current &&
-        !desktopUserMenuRef.current.contains(target)
-      ) {
-        setDesktopUserOpen(false);
-      }
 
       if (
         mobileUserOpen &&
@@ -69,11 +56,11 @@ export default function Nav() {
       }
     };
 
-    if (!desktopUserOpen && !mobileUserOpen) return;
+    if (!mobileUserOpen) return;
 
     window.addEventListener("mousedown", onPointerDown);
     return () => window.removeEventListener("mousedown", onPointerDown);
-  }, [desktopUserOpen, mobileUserOpen]);
+  }, [mobileUserOpen]);
 
   const toggleDesktopCollapsed = () => {
     setDesktopCollapsed((current) => {
@@ -83,63 +70,12 @@ export default function Nav() {
     });
   };
 
-  const adminChildren = [
-    { href: "/admin#users", label: "Users", icon: Users },
-    { href: "/admin#genres", label: "Genres", icon: Disc3 },
-  ];
-
   const firstName = session?.user?.name?.trim()?.split(/\s+/)[0] || "Account";
-  const navItems = isAdmin ? [...links, { href: "/admin", label: "Admin", icon: Users }] : links;
 
   if (!session) return null;
 
   return (
     <>
-      {/* Desktop user menu */}
-      <div ref={desktopUserMenuRef} className="hidden md:block fixed top-4 right-4 z-[70]">
-        <button
-          type="button"
-          onClick={() => setDesktopUserOpen((current) => !current)}
-          aria-label="Open account menu"
-          aria-expanded={desktopUserOpen}
-          className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--foreground)] shadow-lg backdrop-blur transition-colors hover:bg-[var(--surface-muted)]"
-        >
-          <span className="max-w-36 truncate">{firstName}</span>
-          <ChevronDown size={16} className={cn("transition-transform", desktopUserOpen ? "rotate-180" : "rotate-0")} />
-        </button>
-
-        {desktopUserOpen && (
-          <div className="absolute right-0 mt-2 w-44 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1 shadow-2xl">
-            <Link
-              href="/settings"
-              onClick={() => setDesktopUserOpen(false)}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
-            >
-              <Settings size={15} />
-              Settings
-            </Link>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                onClick={() => setDesktopUserOpen(false)}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
-              >
-                <Users size={15} />
-                Admin
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
-            >
-              <LogOut size={15} />
-              Logout
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-50 h-14 bg-[var(--surface)] backdrop-blur border-b border-[var(--border)] flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2 text-[var(--foreground)]">
@@ -174,7 +110,7 @@ export default function Nav() {
         <nav
           id="mobile-navigation"
           className={cn(
-            "absolute top-0 left-0 h-full w-[min(85vw,20rem)] bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col transition-transform duration-200",
+            "absolute top-0 left-0 h-full w-[min(85vw,20rem)] border-r border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col transition-transform duration-200",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -196,17 +132,17 @@ export default function Nav() {
               </button>
 
               {mobileUserOpen && (
-                <div className="absolute right-11 top-0 w-40 rounded-lg border border-zinc-700 bg-zinc-900 p-1 shadow-2xl">
+                <div className="absolute right-11 top-0 w-52 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1 shadow-2xl">
                   <Link
                     href="/settings"
                     onClick={() => {
                       setMobileUserOpen(false);
                       setMobileOpen(false);
                     }}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                   >
                     <Settings size={15} />
-                    Settings
+                    Account Settings
                   </Link>
                   {isAdmin && (
                     <Link
@@ -215,19 +151,19 @@ export default function Nav() {
                         setMobileUserOpen(false);
                         setMobileOpen(false);
                       }}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                     >
                       <Users size={15} />
-                      Admin
+                      Administration
                     </Link>
                   )}
                   <button
                     type="button"
                     onClick={() => signOut({ callbackUrl: "/login" })}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                   >
                     <LogOut size={15} />
-                    Logout
+                    Sign out
                   </button>
                 </div>
               )}
@@ -247,7 +183,7 @@ export default function Nav() {
           </div>
 
           <div className="space-y-1">
-            {navItems.map(({ href, label, icon: Icon }) => (
+            {links.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
@@ -256,7 +192,7 @@ export default function Nav() {
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors",
                   pathname.startsWith(href)
                     ? "bg-amber-400/10 text-amber-400"
-                    : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                    : "text-zinc-500 hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                 )}
               >
                 <Icon size={16} />
@@ -265,7 +201,7 @@ export default function Nav() {
             ))}
           </div>
 
-          <div className="mt-auto pt-4 border-t border-zinc-800 px-3">
+          <div className="mt-auto pt-4 border-t border-[var(--border)] px-3">
             <p className="text-xs text-zinc-500 truncate">{session.user?.email}</p>
           </div>
         </nav>
@@ -315,57 +251,6 @@ export default function Nav() {
           </Link>
         ))}
 
-        {isAdmin && (
-          <div>
-            {!desktopCollapsed && (
-              <button
-                type="button"
-                onClick={() => setAdminOpen((s) => !s)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 w-full"
-              >
-                <Users size={16} />
-                <span className="flex-1 text-left">Admin</span>
-                <svg className={cn("w-4 h-4 transition-transform", adminOpen ? "rotate-180" : "rotate-0")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-              </button>
-            )}
-
-            {(desktopCollapsed || adminOpen) && (
-              <div className={cn(desktopCollapsed ? "mt-1 space-y-1" : "ml-4 mt-2 space-y-1") }>
-                {adminChildren.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={label}
-                    href={href}
-                    title={desktopCollapsed ? label : undefined}
-                    className={cn(
-                      "flex items-center rounded-lg text-xs uppercase tracking-widest",
-                      desktopCollapsed ? "justify-center px-2 py-2" : "gap-2 px-3 py-1.5",
-                      pathname.startsWith(href) ? "bg-amber-400/10 text-amber-400" : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-                    )}
-                  >
-                    <Icon size={14} />
-                    {desktopCollapsed ? <span className="sr-only">{label}</span> : label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-        )}
-
-        <div className="mt-auto pt-4 border-t border-zinc-800">
-          {!desktopCollapsed && <p className="text-xs text-zinc-500 px-3 mb-2 truncate">{session.user?.email}</p>}
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            title={desktopCollapsed ? "Sign out" : undefined}
-            className={cn(
-              "flex items-center rounded-lg text-sm text-zinc-400 hover:text-red-400 hover:bg-zinc-800 w-full transition-colors",
-              desktopCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2"
-            )}
-          >
-            <LogOut size={16} />
-            {desktopCollapsed ? <span className="sr-only">Sign out</span> : "Sign out"}
-          </button>
-        </div>
       </nav>
     </>
   );

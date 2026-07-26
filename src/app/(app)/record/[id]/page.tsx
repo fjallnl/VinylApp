@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Star, Edit, Disc3 } from "lucide-react";
 import DeleteRecordButton from "./DeleteRecordButton";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export default async function RecordPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -20,11 +21,16 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/collection" className="text-zinc-400 hover:text-zinc-100 shrink-0">
-          <ArrowLeft size={18} />
-        </Link>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500">{record.artist}</p>
+      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Link href="/collection" className="text-zinc-400 hover:text-zinc-100 shrink-0">
+            <ArrowLeft size={18} />
+          </Link>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500">{record.artist}</p>
+        </div>
+        <div className="hidden md:block">
+          <DesktopUserMenu />
+        </div>
       </div>
 
       <div className="flex gap-6 flex-col sm:flex-row">

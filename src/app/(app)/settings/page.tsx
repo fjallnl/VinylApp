@@ -2,7 +2,8 @@
 
 import type { ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 const options = [
   { value: "system", label: "System" },
@@ -15,16 +16,13 @@ type ThemePreference = (typeof options)[number]["value"];
 export default function SettingsPage() {
   const { data: session } = useSession();
   const serverPreference = session?.user.themePreference ?? "system";
-  const [themePreference, setThemePreference] = useState<ThemePreference>(serverPreference);
+  const [pendingThemePreference, setPendingThemePreference] = useState<ThemePreference | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setThemePreference(serverPreference);
-  }, [serverPreference]);
+  const themePreference = pendingThemePreference ?? serverPreference;
 
   async function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const selected = event.target.value as ThemePreference;
-    setThemePreference(selected);
+    setPendingThemePreference(selected);
     setSaving(true);
 
     await fetch("/api/user/settings", {
@@ -38,11 +36,20 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-        <h1 className="text-2xl font-semibold mb-2">Settings</h1>
-        <p className="text-zinc-400 mb-6">Change your personal preferences for the app.</p>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold uppercase tracking-widest">Account Settings</h1>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+            Personal preferences
+          </p>
+        </div>
+        <div className="hidden md:block">
+          <DesktopUserMenu />
+        </div>
+      </div>
 
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
         <div className="space-y-6">
           <div>
             <label htmlFor="themePreference" className="block text-sm font-semibold text-zinc-300 mb-2">

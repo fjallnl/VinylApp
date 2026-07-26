@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export default function AddWantlistPage() {
   const router = useRouter();
@@ -30,11 +31,16 @@ export default function AddWantlistPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-lg mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/wantlist" className="text-zinc-400 hover:text-zinc-100">
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="text-xl font-bold">Add to Wantlist</h1>
+      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Link href="/wantlist" className="text-zinc-400 hover:text-zinc-100">
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="text-xl font-bold">Add to Wantlist</h1>
+        </div>
+        <div className="hidden md:block">
+          <DesktopUserMenu />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

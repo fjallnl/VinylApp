@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { PlusCircle, Search, Disc3 } from "lucide-react";
 import CollectionGrid from "@/components/CollectionGrid";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -40,13 +41,18 @@ export default async function CollectionPage({
             {records.length} record{records.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/add"
-          className="flex items-center gap-2 bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-amber-300 transition-colors"
-        >
-          <PlusCircle size={14} />
-          Add Record
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/add"
+            className="flex h-10 items-center gap-2 rounded-lg bg-amber-400 px-4 text-xs font-bold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-amber-300"
+          >
+            <PlusCircle size={14} />
+            Add Record
+          </Link>
+          <div className="hidden md:block">
+            <DesktopUserMenu />
+          </div>
+        </div>
       </div>
 
       <form className="mb-6">

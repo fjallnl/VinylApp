@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Greeting from "@/components/dashboard/Greeting";
 import RecentAdditions from "@/components/dashboard/RecentAdditions";
 import CatalogPreview from "@/components/dashboard/CatalogPreview";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <Greeting />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <Greeting />
+        <div className="hidden md:block">
+          <DesktopUserMenu />
+        </div>
+      </div>
       <RecentAdditions records={recentRecords} />
       <CatalogPreview records={previewRecords} />
     </div>

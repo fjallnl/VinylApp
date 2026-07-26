@@ -35,9 +35,9 @@ export default function GenresAdmin({ genres }: { genres: { id: string; name: st
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <section>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold uppercase tracking-widest">Genres</h1>
+        <h2 className="text-xl font-bold uppercase tracking-widest">Genres</h2>
         <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">{genres.length} genre{genres.length !== 1 ? "s" : ""}</p>
       </div>
 
@@ -75,6 +75,6 @@ export default function GenresAdmin({ genres }: { genres: { id: string; name: st
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

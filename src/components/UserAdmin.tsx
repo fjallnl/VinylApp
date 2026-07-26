@@ -111,9 +111,9 @@ export default function UserAdmin({
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <section>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold uppercase tracking-widest">Users</h1>
+        <h2 className="text-xl font-bold uppercase tracking-widest">Users</h2>
         <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
           {users.length} user{users.length !== 1 ? "s" : ""}
         </p>
@@ -282,6 +282,6 @@ export default function UserAdmin({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

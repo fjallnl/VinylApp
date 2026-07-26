@@ -1,8 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Heart, PlusCircle, Trash2 } from "lucide-react";
+import { Heart, PlusCircle } from "lucide-react";
 import WantlistActions from "./WantlistActions";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +17,25 @@ export default async function WantlistPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-widest">Wantlist</h1>
           <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
             {items.length} item{items.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/wantlist/add"
-          className="flex items-center gap-2 bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-amber-300 transition-colors"
-        >
-          <PlusCircle size={14} />
-          Add
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/wantlist/add"
+            className="flex h-10 items-center gap-2 rounded-lg bg-amber-400 px-4 text-xs font-bold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-amber-300"
+          >
+            <PlusCircle size={14} />
+            Add
+          </Link>
+          <div className="hidden md:block">
+            <DesktopUserMenu />
+          </div>
+        </div>
       </div>
 
       {items.length === 0 ? (

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Disc3 } from "lucide-react";
 import Link from "next/link";
 import CollectionCarousel from "@/components/CollectionCarousel";
+import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,16 @@ export default async function ShowcasePage() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold uppercase tracking-widest">Showcase</h1>
-        <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
-          {records.length} record{records.length !== 1 ? "s" : ""}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold uppercase tracking-widest">Showcase</h1>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+            {records.length} record{records.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="hidden md:block">
+          <DesktopUserMenu />
+        </div>
       </div>
 
       {records.length === 0 ? (
