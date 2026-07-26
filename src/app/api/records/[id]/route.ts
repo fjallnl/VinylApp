@@ -25,6 +25,10 @@ const schema = z.object({
   tracks: z.array(z.object({ position: z.string(), title: z.string(), duration: z.string() })).default([]),
 });
 
+const favoriteSchema = z.object({
+  favorite: z.boolean(),
+});
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -63,6 +67,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       barcodes: [],
       tracks: { deleteMany: {}, create: tracks },
     },
+  });
+
+  return NextResponse.json(record);
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const existing = await prisma.record.findFirst({ where: { id, userId: session.user.id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const body = await req.json();
+  const parsed = favoriteSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+
+  const record = await prisma.record.update({
+    where: { id },
+    data: { favorite: parsed.data.favorite },
+    select: { id: true, favorite: true },
   });
 
   return NextResponse.json(record);
