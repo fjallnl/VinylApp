@@ -20,7 +20,7 @@ export async function GET(req: Request) {
         thumb: r.thumb,
       })),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Discogs unavailable" }, { status: 502 });
   }
 }

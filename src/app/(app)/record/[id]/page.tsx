@@ -4,7 +4,7 @@ import { coverUrl } from "@/lib/s3";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Star, Edit, Disc3 } from "lucide-react";
+import { ArrowLeft, Star, Edit, Disc3, ExternalLink } from "lucide-react";
 import DeleteRecordButton from "./DeleteRecordButton";
 import DesktopUserMenu from "@/components/DesktopUserMenu";
 
@@ -20,6 +20,10 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
   if (!record) notFound();
   const spotifyQuery = encodeURIComponent(`${record.artist} ${record.title}`.trim());
   const spotifySearchUrl = `https://open.spotify.com/search/${spotifyQuery}`;
+  const discogsSearchQuery = encodeURIComponent((record.catalogNumber || `${record.artist} ${record.title}`).trim());
+  const discogsUrl = record.discogsId
+    ? `https://www.discogs.com/release/${encodeURIComponent(record.discogsId)}`
+    : `https://www.discogs.com/search/?type=release&q=${discogsSearchQuery}`;
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
@@ -98,6 +102,15 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
               Edit
             </Link>
             <DeleteRecordButton id={record.id} />
+            <Link
+              href={discogsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Show on Discogs"
+              className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors"
+            >
+              <ExternalLink size={16} aria-hidden="true" className="text-amber-400" />
+            </Link>
             <Link
               href={spotifySearchUrl}
               target="_blank"
