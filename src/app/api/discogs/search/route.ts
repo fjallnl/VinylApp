@@ -16,10 +16,10 @@ export async function GET(req: Request) {
         id: r.id,
         title: r.title,
         year: r.year,
-        thumb: r.thumb,
+        thumb: r.thumb || r.cover_image,
       })),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Discogs unavailable" }, { status: 502 });
   }
 }
