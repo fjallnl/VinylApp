@@ -18,6 +18,8 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
   });
 
   if (!record) notFound();
+  const spotifyQuery = encodeURIComponent(`${record.artist} ${record.title}`.trim());
+  const spotifySearchUrl = `https://open.spotify.com/search/${spotifyQuery}`;
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
@@ -96,6 +98,15 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
               Edit
             </Link>
             <DeleteRecordButton id={record.id} />
+            <Link
+              href={spotifySearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Show on Spotify"
+              className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors"
+            >
+              <Disc3 size={16} aria-hidden="true" className="text-[#1DB954]" />
+            </Link>
           </div>
         </div>
       </div>
