@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VinylApp
 
-## Getting Started
+VinylApp is een self-hosted webapp om je vinylcollectie te beheren.
 
-First, run the development server:
+## Wat doet deze applicatie?
+
+- Beheer je eigen **platenverzameling** en **wantlist**
+- Ondersteunt **meerdere gebruikers** (iedereen ziet alleen zijn/haar eigen data)
+- **Admin-paneel** voor gebruikersbeheer (`/admin`)
+- **Discogs-integratie** voor zoeken en release-data
+- **Cover-opslag** in MinIO (S3-compatible)
+- In te stellen als **PWA** op mobiel
+
+Stack: Next.js 16, TypeScript, Prisma 7, NextAuth v5, PostgreSQL, MinIO.
+
+---
+
+## 1) Starten in je dev-omgeving (lokaal)
+
+### Vereisten
+
+- Node.js 20+
+- Docker (voor PostgreSQL + MinIO)
+
+### Stappen
+
+1. Dependencies installeren:
+
+```bash
+npm ci
+```
+
+2. Omgevingsvariabelen instellen:
+
+```bash
+cp .env.example .env
+```
+
+Voor PowerShell op Windows kan ook:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+3. PostgreSQL en MinIO starten:
+
+```bash
+docker run -d --name vinyl-postgres -e POSTGRES_USER=vinyluser -e POSTGRES_PASSWORD=vinylpass -e POSTGRES_DB=vinyldb -p 5432:5432 postgres:16
+docker run -d --name vinyl-minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin -p 9000:9000 -p 9001:9001 quay.io/minio/minio server /data --console-address ":9001"
+docker exec -it vinyl-minio mc alias set local http://localhost:9000 minioadmin minioadmin
+docker exec -it vinyl-minio mc mb --ignore-existing local/vinyl-covers
+docker exec -it vinyl-minio mc anonymous set public local/vinyl-covers
+```
+
+4. Database schema pushen:
+
+```bash
+npm run db:push
+```
+
+5. (Aanrader) eerste admin gebruiker maken:
+
+```bash
+npm run create-user -- admin@example.com sterk-wachtwoord
+```
+
+6. Dev server starten:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App draait dan op: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2) Starten in een container (Docker Compose)
 
-## Learn More
+De repository bevat een `docker-compose.yml` met:
 
-To learn more about Next.js, take a look at the following resources:
+- `postgres`
+- `minio`
+- `minio-init` (maakt bucket `vinyl-covers` + public access)
+- `app` (bouwt en start VinylApp)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Stappen
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Maak `.env` (bijv. op basis van `.env.example`) en zet minimaal:
 
-## Deploy on Vercel
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `NEXT_PUBLIC_S3_PUBLIC_URL`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Start alles:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose up -d --build
+```
+
+3. (Optioneel) admin gebruiker maken:
+
+```bash
+docker exec -it vinyl-app node_modules/.bin/tsx scripts/create-user.ts admin@example.com sterk-wachtwoord
+```
+
+App draait dan op: http://localhost:3000
+
+---
+
+## 3) Deploy op Vercel
+
+> Let op: Vercel host alleen de Next.js app. Je hebt extern nodig:
+>
+> - PostgreSQL (bijv. Neon, Supabase, Azure Database for PostgreSQL, Vercel Postgres)
+> - S3-compatible object storage (bijv. AWS S3, Cloudflare R2, MinIO buiten Vercel)
+
+### Stappen
+
+1. Push je repo naar GitHub en importeer het project in Vercel.
+
+2. Stel in Vercel Environment Variables in (Production/Preview naar wens):
+
+- `DATABASE_URL`
+- `NEXTAUTH_URL` (je Vercel domein, bijv. `https://jouw-app.vercel.app`)
+- `NEXTAUTH_SECRET`
+- `APP_BASE_URL`
+- `S3_ENDPOINT`
+- `S3_ACCESS_KEY`
+- `S3_SECRET_KEY`
+- `S3_BUCKET`
+- `S3_REGION`
+- `NEXT_PUBLIC_S3_PUBLIC_URL`
+- optioneel: `DISCOGS_USER_AGENT`, `DISCOGS_TOKEN`
+
+3. Deploy de app op Vercel.
+
+4. Push daarna eenmalig je Prisma schema naar je productie-database:
+
+```bash
+npm run db:push
+```
+
+Gebruik hiervoor dezelfde `DATABASE_URL` als in Vercel (bijv. lokaal tijdelijk gezet).
+
+5. Maak een admin gebruiker:
+
+```bash
+npm run create-user -- admin@example.com sterk-wachtwoord
+```
+
+Ook hier met productie `DATABASE_URL`.
+
+---
+
+## Nuttige scripts
+
+- `npm run dev` - start dev server
+- `npm run build` - Prisma generate + Next build
+- `npm run start` - start productie-server
+- `npm run lint` - ESLint
+- `npm run db:push` - push Prisma schema naar database
+- `npm run create-user -- <email> <password>` - maak/promoveer ADMIN user
