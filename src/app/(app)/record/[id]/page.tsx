@@ -18,6 +18,8 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
   });
 
   if (!record) notFound();
+  const spotifyQuery = encodeURIComponent(`${record.artist} ${record.title}`.trim());
+  const spotifySearchUrl = `https://open.spotify.com/search/${spotifyQuery}`;
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
@@ -94,6 +96,17 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             >
               <Edit size={13} />
               Edit
+            </Link>
+            <Link
+              href={spotifySearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Show on Spotify"
+              className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current text-[#1DB954]">
+                <path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.2 17.3a.75.75 0 0 1-1.03.25 10.2 10.2 0 0 0-5.16-1.27c-1.67 0-3.07.3-4.3.9a.75.75 0 1 1-.66-1.35c1.45-.7 3.06-1.05 4.96-1.05 2.1 0 4.05.48 5.91 1.54.35.2.47.66.28 1Zm1.02-2.55a.94.94 0 0 1-1.28.32c-1.71-1.05-4.3-1.66-6.62-1.66-1.93 0-3.61.33-4.99.99a.94.94 0 1 1-.8-1.7c1.65-.77 3.59-1.17 5.79-1.17 2.64 0 5.56.69 7.6 1.94.45.28.6.86.3 1.28Zm.12-2.63c-2.04-1.21-5.4-1.98-8.18-1.98-2.23 0-4.44.46-6.03 1.26a1.12 1.12 0 1 1-1-2c1.9-.95 4.42-1.47 7.06-1.47 3.1 0 6.82.83 9.3 2.3a1.12 1.12 0 1 1-1.15 1.9Z" />
+              </svg>
             </Link>
             <DeleteRecordButton id={record.id} />
           </div>
