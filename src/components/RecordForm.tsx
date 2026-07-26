@@ -53,7 +53,7 @@ interface RecordData {
 export default function RecordForm({ record }: { record?: RecordData }) {
   const router = useRouter();
   const [searching, setSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; thumb: string }[]>([]);
+  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; thumb: string; catalogNumber?: string | null }[]>([]);
   const [tracks, setTracks] = useState<Track[]>(
     record?.tracks.map((t) => ({ position: t.position ?? "", title: t.title, duration: t.duration ?? "" })) ?? []
   );
@@ -343,7 +343,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{r.title}</p>
-                  {r.year && <p className="text-xs text-zinc-400">{r.year}</p>}
+                  {(r.year || r.catalogNumber) && (
+                    <p className="text-xs text-zinc-400">
+                      {r.year && r.catalogNumber ? `${r.year} - cat. no. ${r.catalogNumber}` : r.year || `cat. no. ${r.catalogNumber}`}
+                    </p>
+                  )}
                 </div>
               </button>
             ))}
