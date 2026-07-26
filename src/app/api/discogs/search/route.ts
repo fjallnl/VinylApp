@@ -16,7 +16,8 @@ export async function GET(req: Request) {
         id: r.id,
         title: r.title,
         year: r.year,
-        thumb: r.thumb || r.cover_image,
+        catalogNumber: r.catno,
+        thumb: r.thumb,
       })),
     });
   } catch {
