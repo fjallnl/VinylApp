@@ -13,6 +13,26 @@ VinylApp is een self-hosted webapp om je vinylcollectie te beheren.
 
 Stack: Next.js 16, TypeScript, Prisma 7, NextAuth v5, PostgreSQL, MinIO.
 
+## Architectuur (Mermaid)
+
+```mermaid
+flowchart LR
+  U[Gebruiker - Browser of PWA] -->|HTTPS| NGINX[nginx reverse proxy - self hosted productie]
+  NGINX --> APP[VinylApp - Next.js 16 App Router]
+
+  APP -->|Auth sessies en JWT| AUTH[NextAuth v5]
+  AUTH -->|User/role lookup| DB[(PostgreSQL 16)]
+
+  APP -->|ORM queries| PRISMA[Prisma 7]
+  PRISMA --> DB
+
+  APP -->|S3 API upload download delete| MINIO[(MinIO S3 compatible storage)]
+  U -->|Publieke cover URL| MINIO
+
+  APP -->|Zoeken release-data| DISCOGS[Discogs API]
+  APP -->|Server-side cover download| DISCOGS
+```
+
 ---
 
 ## 1) Starten in je dev-omgeving (lokaal)
