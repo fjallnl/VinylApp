@@ -96,6 +96,7 @@ model Record {
   discogsId       String?   @unique
   barcodes        String[]
   coverImage      String?
+  favorite        Boolean   @default(false)
   rating          Int?
   condition       String?
   mediaCondition  String?

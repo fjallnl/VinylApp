@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Greeting from "@/components/dashboard/Greeting";
+import FavoriteAlbums from "@/components/dashboard/FavoriteAlbums";
 import RecentAdditions from "@/components/dashboard/RecentAdditions";
 import CatalogPreview from "@/components/dashboard/CatalogPreview";
 import DesktopUserMenu from "@/components/DesktopUserMenu";
@@ -14,7 +15,12 @@ export default async function DashboardPage() {
   const session = await auth();
   const userId = session!.user!.id;
 
-  const [recentRecords, catalogCount] = await Promise.all([
+  const [favoriteRecords, recentRecords, catalogCount] = await Promise.all([
+    prisma.record.findMany({
+      where: { userId, favorite: true },
+      select: { id: true, title: true, artist: true, year: true, coverImage: true },
+      orderBy: { updatedAt: "desc" },
+    }),
     prisma.record.findMany({
       where: { userId },
       select: {
@@ -52,6 +58,7 @@ export default async function DashboardPage() {
           <DesktopUserMenu />
         </div>
       </div>
+      <FavoriteAlbums records={favoriteRecords} />
       <RecentAdditions records={recentRecords} />
       <CatalogPreview records={previewRecords} />
     </div>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Star, Edit, Disc3, ExternalLink } from "lucide-react";
 import DeleteRecordButton from "./DeleteRecordButton";
+import FavoriteToggleButton from "./FavoriteToggleButton";
 import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 export default async function RecordPage({ params }: { params: Promise<{ id: string }> }) {
@@ -94,6 +95,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
           {record.notes && <p className="text-sm text-zinc-400 mb-6">{record.notes}</p>}
 
           <div className="flex gap-3">
+            <FavoriteToggleButton recordId={record.id} initialFavorite={record.favorite} />
             <Link
               href={`/record/${record.id}/edit`}
               className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors"
