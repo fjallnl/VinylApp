@@ -22,13 +22,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
+        const user = await prisma.user.findFirst({
+          where: {
+            email: { equals: parsed.data.email.trim(), mode: "insensitive" },
+          },
         });
         if (!user?.passwordHash) return null;
 
         const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
         if (!valid) return null;
+        if (user.role !== "ADMIN" && !user.emailVerified) {
+          throw new Error("EmailNotVerified");
+        }
 
         return {
           id: user.id,
@@ -54,9 +59,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, themePreference: true },
+          select: { role: true, themePreference: true, emailVerified: true },
         });
         if (!dbUser) return null;
+        if (dbUser.role !== "ADMIN" && !dbUser.emailVerified) return null;
         token.role = dbUser.role;
         token.theme = dbUser.themePreference;
       }

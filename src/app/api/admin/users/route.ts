@@ -38,14 +38,20 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { email, name, password, role } = parsed.data;
+  const email = parsed.data.email.trim().toLowerCase();
+  const name = parsed.data.name?.trim() || null;
+  const { password, role } = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findFirst({
+    where: {
+      email: { equals: email, mode: "insensitive" },
+    },
+  });
   if (existing) return NextResponse.json({ error: "A user with this email already exists" }, { status: 409 });
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { email, name, passwordHash, role },
+    data: { email, name, passwordHash, role, emailVerified: new Date() },
     select: { id: true, email: true, name: true, role: true, createdAt: true },
   });
 

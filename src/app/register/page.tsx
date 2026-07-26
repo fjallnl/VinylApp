@@ -1,19 +1,29 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { Disc3, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getPasswordRuleResults, isPasswordPolicyCompliant } from "@/lib/password-policy";
 
 const schema = z
   .object({
     email: z.string().email("Valid email required"),
     name: z.string().optional(),
-    password: z.string().min(6, "At least 6 characters"),
+    password: z.string(),
     confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (!isPasswordPolicyCompliant({ password: data.password, email: data.email, name: data.name })) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["password"],
+        message: "Please use a stronger password",
+      });
+    }
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -28,17 +38,34 @@ const labelClass = "block text-[11px] font-semibold text-zinc-400 uppercase trac
 
 export default function RegisterPage() {
   const [serverError, setServerError] = useState("");
+  const [serverMessage, setServerMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
+    getValues,
+    control,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  const passwordValue = useWatch({ control, name: "password" }) || "";
+  const emailValue = useWatch({ control, name: "email" }) || "";
+  const nameValue = useWatch({ control, name: "name" }) || "";
+  const confirmPasswordValue = useWatch({ control, name: "confirmPassword" }) || "";
+  const passwordRules = getPasswordRuleResults({
+    password: passwordValue,
+    email: emailValue,
+    name: nameValue,
+  });
+  const showPasswordRules = passwordValue.length > 0;
+  const showPasswordMatchRule = passwordValue.length > 0 || confirmPasswordValue.length > 0;
+  const passwordsMatch = passwordValue.length > 0 && confirmPasswordValue.length > 0 && passwordValue === confirmPasswordValue;
 
   async function onSubmit(data: FormData) {
     setLoading(true);
     setServerError("");
+    setServerMessage("");
 
     const res = await fetch("/api/register", {
       method: "POST",
@@ -53,18 +80,8 @@ export default function RegisterPage() {
       return;
     }
 
-    const signInRes = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
-
     setLoading(false);
-    if (signInRes?.error) {
-      window.location.href = "/login";
-    } else {
-      window.location.href = "/collection";
-    }
+    setServerMessage("Check your email for a verification link before signing in.");
   }
 
   return (
@@ -88,15 +105,38 @@ export default function RegisterPage() {
           <div>
             <label className={labelClass}>Password</label>
             <input {...register("password")} type="password" autoComplete="new-password" className={inputClass} />
+            {showPasswordRules && (
+              <ul className="mt-2.5 space-y-1">
+                {passwordRules.map((rule) => (
+                  <li
+                    key={rule.id}
+                    className={cn(
+                      "text-xs transition-colors",
+                      rule.passed ? "text-amber-400" : "text-zinc-500"
+                    )}
+                  >
+                    {rule.label}
+                  </li>
+                ))}
+              </ul>
+            )}
             {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password.message}</p>}
           </div>
           <div>
             <label className={labelClass}>Confirm password</label>
             <input {...register("confirmPassword")} type="password" autoComplete="new-password" className={inputClass} />
+            {showPasswordMatchRule && (
+              <ul className="mt-2.5 space-y-1">
+                <li className={cn("text-xs transition-colors", passwordsMatch ? "text-amber-400" : "text-zinc-500")}>
+                  Passwords match
+                </li>
+              </ul>
+            )}
             {errors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>}
           </div>
 
           {serverError && <p className="text-red-400 text-xs uppercase tracking-wide font-semibold">{serverError}</p>}
+          {serverMessage && <p className="text-emerald-400 text-xs uppercase tracking-wide font-semibold">{serverMessage}</p>}
 
           <button
             type="submit"
@@ -112,6 +152,12 @@ export default function RegisterPage() {
           Already have an account?{" "}
           <Link href="/login" className="text-amber-400 hover:underline">
             Sign in
+          </Link>
+        </p>
+        <p className="text-center text-xs text-zinc-500 mt-2">
+          Need a new verification email?{" "}
+          <Link href={`/login?email=${encodeURIComponent(getValues("email") || "")}`} className="text-amber-400 hover:underline">
+            Resend it
           </Link>
         </p>
       </div>

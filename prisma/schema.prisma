@@ -21,6 +21,7 @@ enum ThemePreference {
 model User {
   id              String          @id @default(cuid())
   email           String          @unique
+  emailVerified   DateTime?
   name            String?
   passwordHash    String?
   role            Role            @default(USER)
@@ -30,6 +31,7 @@ model User {
   wantlist        Wantlist[]
   sessions        Session[]
   accounts        Account[]
+  emailVerificationTokens EmailVerificationToken[]
 }
 
 model Account {
@@ -64,6 +66,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
 }
 
 model Record {
@@ -126,4 +141,3 @@ model Genre {
   name      String   @unique
   createdAt DateTime @default(now())
 }
-

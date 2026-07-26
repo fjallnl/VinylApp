@@ -16,13 +16,30 @@ async function main() {
     console.error("Usage: npx tsx scripts/create-user.ts <email> <password>");
     process.exit(1);
   }
+  const normalizedEmail = email.trim().toLowerCase();
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: { passwordHash, role: "ADMIN" },
-    create: { email, passwordHash, name: "Admin", role: "ADMIN" },
+  const existing = await prisma.user.findFirst({
+    where: {
+      email: { equals: normalizedEmail, mode: "insensitive" },
+    },
+    select: { id: true },
   });
+
+  const user = existing
+    ? await prisma.user.update({
+        where: { id: existing.id },
+        data: { email: normalizedEmail, passwordHash, role: "ADMIN", emailVerified: new Date() },
+      })
+    : await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          name: "Admin",
+          role: "ADMIN",
+          emailVerified: new Date(),
+        },
+      });
 
   console.log(`User created/updated: ${user.email} (id: ${user.id})`);
 }
