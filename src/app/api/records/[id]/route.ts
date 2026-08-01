@@ -46,8 +46,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (discogsCoverUrl && !data.coverImage) {
     try {
       data.coverImage = await downloadCoverToMinio(discogsCoverUrl);
-    } catch {
-      // non-fatal
+    } catch (error) {
+      console.error("Failed to import Discogs cover", error);
+      return NextResponse.json({ error: "Failed to import cover image from Discogs" }, { status: 502 });
     }
   }
 

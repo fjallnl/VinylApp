@@ -217,11 +217,25 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       let coverKey: string | undefined;
 
       if (coverFile) {
-        const ext = coverFile.name.split(".").pop();
+        const extFromName = coverFile.name.split(".").pop()?.toLowerCase();
+        const extFromType = coverFile.type.split("/")[1]?.toLowerCase();
+        const ext = extFromName || extFromType || "jpg";
         const key = `${Date.now()}.${ext}`;
         const urlRes = await fetch(`/api/upload-url?key=${encodeURIComponent(key)}&type=${encodeURIComponent(coverFile.type)}`);
+        if (!urlRes.ok) {
+          const errorData = await urlRes.json().catch(() => ({}));
+          const errorMsg = errorData.error ? String(errorData.error) : `Failed to get upload URL (HTTP ${urlRes.status})`;
+          setSaveError(errorMsg);
+          throw new Error(errorMsg);
+        }
         const { url } = await urlRes.json();
-        await fetch(url, { method: "PUT", body: coverFile, headers: { "Content-Type": coverFile.type } });
+        const uploadRes = await fetch(url, { method: "PUT", body: coverFile, headers: { "Content-Type": coverFile.type } });
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text().catch(() => "");
+          const errorMsg = `Cover upload failed (HTTP ${uploadRes.status})${errorText ? `: ${errorText.slice(0, 200)}` : ""}`;
+          setSaveError(errorMsg);
+          throw new Error(errorMsg);
+        }
         coverKey = key;
       }
 
