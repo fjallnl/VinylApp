@@ -20,6 +20,10 @@ export const s3 = new S3Client({
     secretAccessKey: process.env.S3_SECRET_KEY!,
   },
   forcePathStyle,
+  // AWS SDK v3 ≥ 3.400 adds x-amz-checksum-crc32 to every PUT by default.
+  // Cloudflare R2 (and MinIO) reject these extra headers with SignatureDoesNotMatch.
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_SUPPORTED",
 });
 
 export const BUCKET = process.env.S3_BUCKET ?? "vinyl-covers";
@@ -40,3 +44,4 @@ export async function getUploadUrl(key: string, contentType: string) {
 export async function deleteObject(key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
 }
+
