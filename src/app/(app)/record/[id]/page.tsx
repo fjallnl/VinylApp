@@ -71,15 +71,15 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             </div>
           )}
 
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 mb-6">
-            {record.year && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Year</dt><dd className="text-sm">{record.year}</dd></>}
-            {record.label && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Label</dt><dd className="text-sm">{record.label}</dd></>}
-            {record.catalogNumber && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Cat. No.</dt><dd className="text-sm font-mono">{record.catalogNumber}</dd></>}
-            {record.format && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Format</dt><dd className="text-sm">{record.format}</dd></>}
-            {record.country && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Country</dt><dd className="text-sm">{record.country}</dd></>}
-            {record.mediaCondition && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Media</dt><dd className="text-sm">{record.mediaCondition}</dd></>}
-            {record.sleeveCondition && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Sleeve</dt><dd className="text-sm">{record.sleeveCondition}</dd></>}
-            {record.purchasePrice && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Paid</dt><dd className="text-sm">€{record.purchasePrice.toFixed(2)}</dd></>}
+          <dl className="grid grid-cols-2 max-[455px]:grid-cols-1 gap-x-4 gap-y-3 mb-6">
+            {record.year && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Year</dt><dd className="text-sm break-words">{record.year}</dd></>}
+            {record.label && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Label</dt><dd className="text-sm break-words">{record.label}</dd></>}
+            {record.catalogNumber && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Cat. No.</dt><dd className="text-sm font-mono break-all">{record.catalogNumber}</dd></>}
+            {record.format && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Format</dt><dd className="text-sm break-words">{record.format}</dd></>}
+            {record.country && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Country</dt><dd className="text-sm break-words">{record.country}</dd></>}
+            {record.mediaCondition && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Media</dt><dd className="text-sm break-words">{record.mediaCondition}</dd></>}
+            {record.sleeveCondition && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Sleeve</dt><dd className="text-sm break-words">{record.sleeveCondition}</dd></>}
+            {record.purchasePrice && <><dt className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Paid</dt><dd className="text-sm break-words">€{record.purchasePrice.toFixed(2)}</dd></>}
           </dl>
 
           {record.genre.length > 0 && (
@@ -94,11 +94,11 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
           {record.notes && <p className="text-sm text-zinc-400 mb-6">{record.notes}</p>}
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <FavoriteToggleButton recordId={record.id} initialFavorite={record.favorite} />
             <Link
               href={`/record/${record.id}/edit`}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors"
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 max-[455px]:px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors"
             >
               <Edit size={13} />
               Edit
@@ -134,7 +134,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             {record.tracks.map((track) => (
               <div key={track.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span className="text-zinc-600 text-[11px] font-semibold w-8 text-right shrink-0 tracking-wide">{track.position}</span>
-                <span className="flex-1 text-sm">{track.title}</span>
+                <span className="flex-1 min-w-0 text-sm break-words">{track.title}</span>
                 {track.duration && <span className="text-zinc-500 text-[11px] font-light">{track.duration}</span>}
               </div>
             ))}

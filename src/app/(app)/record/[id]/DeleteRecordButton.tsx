@@ -16,8 +16,8 @@ export default function DeleteRecordButton({ id }: { id: string }) {
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-zinc-400">Delete?</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-zinc-400 shrink-0">Delete?</span>
         <button
           onClick={handleDelete}
           className="bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -37,7 +37,7 @@ export default function DeleteRecordButton({ id }: { id: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex items-center gap-2 bg-zinc-800 hover:bg-red-900/50 hover:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      className="flex items-center gap-2 bg-zinc-800 hover:bg-red-900/50 hover:text-red-400 px-4 max-[455px]:px-3 py-2 rounded-lg text-sm font-medium transition-colors"
     >
       <Trash2 size={14} />
       Delete
