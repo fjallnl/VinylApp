@@ -149,6 +149,7 @@ App draait dan op: http://localhost:3000
 - `S3_SECRET_KEY`
 - `S3_BUCKET`
 - `S3_REGION`
+- `S3_FORCE_PATH_STYLE` (optioneel; zet op `false` voor Cloudflare R2, `true` voor MinIO)
 - `NEXT_PUBLIC_S3_PUBLIC_URL`
 - optioneel: `DISCOGS_USER_AGENT`, `DISCOGS_TOKEN`
 
