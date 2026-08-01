@@ -40,7 +40,7 @@ export default function SettingsPage() {
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-widest">Account Settings</h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+          <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             Personal preferences
           </p>
         </div>
@@ -49,17 +49,17 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+      <div className="bg-surface border border-card rounded-3xl p-6">
         <div className="space-y-6">
           <div>
-            <label htmlFor="themePreference" className="block text-sm font-semibold text-zinc-300 mb-2">
+            <label htmlFor="themePreference" className="block text-sm font-semibold text-secondary mb-2">
               Theme
             </label>
             <select
               id="themePreference"
               value={themePreference}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-100"
+              className="w-full px-3 py-2 bg-card border border-subtle rounded-lg text-sm text-content"
               disabled={saving}
             >
               {options.map((option) => (
@@ -68,7 +68,7 @@ export default function SettingsPage() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-zinc-500 mt-2">Stored per account so it follows you across devices.</p>
+            <p className="text-xs text-dim mt-2">Stored per account so it follows you across devices.</p>
           </div>
         </div>
       </div>

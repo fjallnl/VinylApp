@@ -82,7 +82,7 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
 
   return (
     <div className="space-y-2">
-      <div className="relative rounded-xl overflow-hidden bg-zinc-900">
+      <div className="relative rounded-xl overflow-hidden bg-surface">
         <video
           ref={videoRef}
           playsInline
@@ -92,22 +92,22 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
         />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {!cameraError ? (
-            <div className="w-64 h-32 border-2 border-amber-400 rounded-lg opacity-80" />
+            <div className="w-64 h-32 border-2 border-accent rounded-lg opacity-80" />
           ) : (
             <div className="bg-black/70 p-4 rounded-lg text-center">
               <p className="text-xs text-red-300">{cameraError}</p>
             </div>
           )}
         </div>
-        <p className="text-center text-xs text-zinc-400 py-2">Point camera at barcode</p>
+        <p className="text-center text-xs text-muted py-2">Point camera at barcode</p>
       </div>
 
       <div className="text-center">
-        <p className="text-xs text-zinc-500 mb-1">Scanner not working? Use a photo instead.</p>
+        <p className="text-xs text-dim mb-1">Scanner not working? Use a photo instead.</p>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="text-xs text-amber-400 underline underline-offset-2"
+          className="text-xs text-accent underline underline-offset-2"
         >
           Take photo or upload image
         </button>

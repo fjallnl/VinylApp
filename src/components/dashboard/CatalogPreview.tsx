@@ -16,13 +16,13 @@ export default function CatalogPreview({ records }: { records: CatalogRecord[] }
 
   return (
     <section>
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-4">
-        From Your Catalog
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-dim mb-4">
+        From Your Collection
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {records.map((record) => (
           <Link key={record.id} href={`/record/${record.id}`} className="block group">
-            <div className="aspect-square bg-zinc-800 rounded-lg overflow-hidden mb-2 relative">
+            <div className="aspect-square bg-card rounded-lg overflow-hidden mb-2 relative">
               {record.coverImage ? (
                 <Image
                   src={coverUrl(record.coverImage)}
@@ -33,19 +33,22 @@ export default function CatalogPreview({ records }: { records: CatalogRecord[] }
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Disc3 size={40} className="text-zinc-600" />
+                  <Disc3 size={40} className="text-faint" />
                 </div>
               )}
             </div>
             <p className="text-sm font-semibold leading-tight truncate tracking-wide">
               {record.title}
             </p>
-            <p className="text-[11px] text-zinc-500 uppercase tracking-wider truncate">
+            <p className="text-[11px] text-dim uppercase tracking-wider truncate">
               {record.artist}
             </p>
           </Link>
         ))}
       </div>
+      <Link href="/collection" className="text-sm font-semibold text-dim hover:text-secondary mt-4 block w-fit ml-auto">
+        View Full Collection
+      </Link>
     </section>
   );
 }

@@ -21,7 +21,7 @@ export default async function ShowcasePage() {
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-widest">Showcase</h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+          <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             {records.length} record{records.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -31,10 +31,10 @@ export default async function ShowcasePage() {
       </div>
 
       {records.length === 0 ? (
-        <div className="text-center py-20 text-zinc-500">
+        <div className="text-center py-20 text-dim">
           <Disc3 size={48} className="mx-auto mb-4 opacity-30" />
           <p className="text-lg">No records yet</p>
-          <Link href="/add" className="mt-4 inline-block text-amber-400 text-sm hover:underline">
+          <Link href="/add" className="mt-4 inline-block text-accent text-sm hover:underline">
             Add your first record
           </Link>
         </div>

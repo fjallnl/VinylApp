@@ -27,13 +27,13 @@ export default function AddWantlistPage() {
     router.refresh();
   }
 
-  const inputCls = "w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-zinc-500";
+  const inputCls = "w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent placeholder:text-dim";
 
   return (
     <div className="p-4 md:p-8 max-w-lg mx-auto">
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <Link href="/wantlist" className="text-zinc-400 hover:text-zinc-100">
+          <Link href="/wantlist" className="text-muted hover:text-content">
             <ArrowLeft size={20} />
           </Link>
           <h1 className="text-xl font-bold">Add to Wantlist</h1>
@@ -45,32 +45,32 @@ export default function AddWantlistPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">Title *</label>
+          <label className="block text-sm font-medium text-secondary mb-1">Title *</label>
           <input value={form.title} onChange={(e) => update("title", e.target.value)} required className={inputCls} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">Artist *</label>
+          <label className="block text-sm font-medium text-secondary mb-1">Artist *</label>
           <input value={form.artist} onChange={(e) => update("artist", e.target.value)} required className={inputCls} />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">Year</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Year</label>
             <input type="number" value={form.year} onChange={(e) => update("year", e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">Label</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Label</label>
             <input value={form.label} onChange={(e) => update("label", e.target.value)} className={inputCls} />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-secondary mb-1">Notes</label>
           <textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} rows={3} className={`${inputCls} resize-none`} />
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-amber-400 text-zinc-950 font-semibold py-3 rounded-xl hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-accent text-accent-fg font-semibold py-3 rounded-xl hover:bg-accent-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
           Add to Wantlist

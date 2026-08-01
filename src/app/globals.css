@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+@theme {
+  /* ── Accent ─────────────────────────────────────────────────────────── */
+  /* Change --color-accent to switch the entire app's primary colour */
+  --color-accent:       #fbbf24;  /* amber-400 */
+  --color-accent-hover: #fcd34d;  /* amber-300 — hover state */
+  --color-accent-fg:    #09090b;  /* text / fill drawn ON an accent bg */
+
+  /* ── Surface hierarchy (dark → light within the scale) ──────────────── */
+  --color-base:    #09090b;  /* zinc-950 — outermost page bg */
+  --color-surface: #18181b;  /* zinc-900 — cards, panels */
+  --color-card:    #27272a;  /* zinc-800 — inputs, elevated cards */
+  --color-subtle:  #3f3f46;  /* zinc-700 — hover states, dividers */
+  --color-faint:   #52525b;  /* zinc-600 — faintest bg, dim icons */
+
+  /* ── Text hierarchy (bright → dim) ──────────────────────────────────── */
+  --color-content:   #f4f4f5;  /* zinc-100 — primary foreground */
+  --color-secondary: #d4d4d8;  /* zinc-300 — secondary text */
+  --color-muted:     #a1a1aa;  /* zinc-400 — muted text */
+  --color-dim:       #71717a;  /* zinc-500 — dim labels */
+}
+
 :root {
   color-scheme: light;
   --background: #f8fafc;
@@ -80,42 +101,48 @@ button {
   font-family: var(--font-josefin), "Josefin Sans", sans-serif;
 }
 
-html[data-theme="light"] .bg-zinc-950 { background-color: #f8fafc !important; }
-html[data-theme="light"] .bg-zinc-900 { background-color: #f1f5f9 !important; }
-html[data-theme="light"] .bg-zinc-800 { background-color: #e2e8f0 !important; }
-html[data-theme="light"] .bg-zinc-700 { background-color: #cbd5e1 !important; }
-html[data-theme="light"] .bg-zinc-600 { background-color: #94a3b8 !important; }
-html[data-theme="light"] .text-zinc-100 { color: #0f172a !important; }
-html[data-theme="light"] .text-zinc-300 { color: #1e293b !important; }
-html[data-theme="light"] .text-zinc-400 { color: #334155 !important; }
-html[data-theme="light"] .text-zinc-500 { color: #475569 !important; }
-html[data-theme="light"] .text-zinc-600 { color: #64748b !important; }
-html[data-theme="light"] .border-zinc-800 { border-color: #cbd5e1 !important; }
-html[data-theme="light"] .border-zinc-700 { border-color: #e2e8f0 !important; }
-html[data-theme="light"] .border-zinc-600 { border-color: #94a3b8 !important; }
-html[data-theme="light"] .placeholder\:text-zinc-600::placeholder { color: #94a3b8 !important; }
-html[data-theme="light"] .bg-zinc-800\/50 { background-color: #f8fafc !important; }
-html[data-theme="light"] .hover\:bg-zinc-800:hover { background-color: #cbd5e1 !important; }
-html[data-theme="light"] .hover\:bg-zinc-700:hover { background-color: #e2e8f0 !important; }
+html[data-theme="light"] .bg-base    { background-color: #f8fafc !important; }
+html[data-theme="light"] .bg-surface { background-color: #f1f5f9 !important; }
+html[data-theme="light"] .bg-card    { background-color: #e2e8f0 !important; }
+html[data-theme="light"] .bg-subtle  { background-color: #cbd5e1 !important; }
+html[data-theme="light"] .bg-faint   { background-color: #94a3b8 !important; }
+html[data-theme="light"] .text-content   { color: #0f172a !important; }
+html[data-theme="light"] .text-secondary { color: #1e293b !important; }
+html[data-theme="light"] .text-muted     { color: #334155 !important; }
+html[data-theme="light"] .text-dim       { color: #475569 !important; }
+html[data-theme="light"] .text-faint     { color: #64748b !important; }
+html[data-theme="light"] .border-card    { border-color: #cbd5e1 !important; }
+html[data-theme="light"] .border-subtle  { border-color: #e2e8f0 !important; }
+html[data-theme="light"] .border-faint   { border-color: #94a3b8 !important; }
+html[data-theme="light"] .placeholder\:text-dim::placeholder   { color: #94a3b8 !important; }
+html[data-theme="light"] .placeholder\:text-faint::placeholder { color: #94a3b8 !important; }
+html[data-theme="light"] .bg-card\/50 { background-color: #f8fafc !important; }
+html[data-theme="light"] .divide-card > :not([hidden]) ~ :not([hidden])   { border-color: #cbd5e1 !important; }
+html[data-theme="light"] .divide-subtle > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+html[data-theme="light"] .hover\:bg-card:hover   { background-color: #cbd5e1 !important; }
+html[data-theme="light"] .hover\:bg-subtle:hover { background-color: #e2e8f0 !important; }
 
 @media (prefers-color-scheme: light) {
-  html[data-theme="system"] .bg-zinc-950 { background-color: #f8fafc !important; }
-  html[data-theme="system"] .bg-zinc-900 { background-color: #f1f5f9 !important; }
-  html[data-theme="system"] .bg-zinc-800 { background-color: #e2e8f0 !important; }
-  html[data-theme="system"] .bg-zinc-700 { background-color: #cbd5e1 !important; }
-  html[data-theme="system"] .bg-zinc-600 { background-color: #94a3b8 !important; }
-  html[data-theme="system"] .text-zinc-100 { color: #0f172a !important; }
-  html[data-theme="system"] .text-zinc-300 { color: #1e293b !important; }
-  html[data-theme="system"] .text-zinc-400 { color: #334155 !important; }
-  html[data-theme="system"] .text-zinc-500 { color: #475569 !important; }
-  html[data-theme="system"] .text-zinc-600 { color: #64748b !important; }
-  html[data-theme="system"] .border-zinc-800 { border-color: #cbd5e1 !important; }
-  html[data-theme="system"] .border-zinc-700 { border-color: #e2e8f0 !important; }
-  html[data-theme="system"] .border-zinc-600 { border-color: #94a3b8 !important; }
-  html[data-theme="system"] .placeholder\:text-zinc-600::placeholder { color: #94a3b8 !important; }
-  html[data-theme="system"] .bg-zinc-800\/50 { background-color: #f8fafc !important; }
-  html[data-theme="system"] .hover\:bg-zinc-800:hover { background-color: #cbd5e1 !important; }
-  html[data-theme="system"] .hover\:bg-zinc-700:hover { background-color: #e2e8f0 !important; }
+  html[data-theme="system"] .bg-base    { background-color: #f8fafc !important; }
+  html[data-theme="system"] .bg-surface { background-color: #f1f5f9 !important; }
+  html[data-theme="system"] .bg-card    { background-color: #e2e8f0 !important; }
+  html[data-theme="system"] .bg-subtle  { background-color: #cbd5e1 !important; }
+  html[data-theme="system"] .bg-faint   { background-color: #94a3b8 !important; }
+  html[data-theme="system"] .text-content   { color: #0f172a !important; }
+  html[data-theme="system"] .text-secondary { color: #1e293b !important; }
+  html[data-theme="system"] .text-muted     { color: #334155 !important; }
+  html[data-theme="system"] .text-dim       { color: #475569 !important; }
+  html[data-theme="system"] .text-faint     { color: #64748b !important; }
+  html[data-theme="system"] .border-card    { border-color: #cbd5e1 !important; }
+  html[data-theme="system"] .border-subtle  { border-color: #e2e8f0 !important; }
+  html[data-theme="system"] .border-faint   { border-color: #94a3b8 !important; }
+  html[data-theme="system"] .placeholder\:text-dim::placeholder   { color: #94a3b8 !important; }
+  html[data-theme="system"] .placeholder\:text-faint::placeholder { color: #94a3b8 !important; }
+  html[data-theme="system"] .bg-card\/50 { background-color: #f8fafc !important; }
+  html[data-theme="system"] .divide-card > :not([hidden]) ~ :not([hidden])   { border-color: #cbd5e1 !important; }
+  html[data-theme="system"] .divide-subtle > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+  html[data-theme="system"] .hover\:bg-card:hover   { background-color: #cbd5e1 !important; }
+  html[data-theme="system"] .hover\:bg-subtle:hover { background-color: #e2e8f0 !important; }
 }
 
 @keyframes vinyl-spin {

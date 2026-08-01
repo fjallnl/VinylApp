@@ -37,14 +37,14 @@ export default async function CollectionPage({
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-widest">Collection</h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+          <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             {records.length} record{records.length !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/add"
-            className="flex h-10 items-center gap-2 rounded-lg bg-amber-400 px-4 text-xs font-bold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-amber-300"
+            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-xs font-bold uppercase tracking-widest text-accent-fg transition-colors hover:bg-accent-hover"
           >
             <PlusCircle size={14} />
             Add Record
@@ -57,22 +57,22 @@ export default async function CollectionPage({
 
       <form className="mb-6">
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
           <input
             name="q"
             defaultValue={q}
             placeholder="Search artist, title, label…"
-            className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-amber-400 placeholder:text-zinc-600"
+            className="w-full pl-9 pr-4 py-2.5 bg-surface border border-subtle rounded-lg text-sm focus:outline-none focus:border-accent placeholder:text-faint"
           />
         </div>
       </form>
 
       {records.length === 0 ? (
-        <div className="text-center py-20 text-zinc-500">
+        <div className="text-center py-20 text-dim">
           <Disc3 size={48} className="mx-auto mb-4 opacity-30" />
           <p className="text-lg">{q ? "No records match your search" : "No records yet"}</p>
           {!q && (
-            <Link href="/add" className="mt-4 inline-block text-amber-400 text-sm hover:underline">
+            <Link href="/add" className="mt-4 inline-block text-accent text-sm hover:underline">
               Add your first record
             </Link>
           )}

@@ -69,12 +69,12 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSelectAll}
-              className="text-[11px] font-bold text-amber-400 hover:text-amber-300 uppercase tracking-widest transition-colors"
+              className="text-[11px] font-bold text-accent hover:text-accent-hover uppercase tracking-widest transition-colors"
             >
               {selectedIds.size === records.length ? "Deselect All" : "Select All"}
             </button>
             {selectedIds.size > 0 && (
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">
                 {selectedIds.size} selected
               </span>
             )}
@@ -92,7 +92,7 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
             )}
             <button
               onClick={exitSelect}
-              className="text-[11px] font-semibold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors"
+              className="text-[11px] font-semibold text-muted hover:text-content uppercase tracking-widest transition-colors"
             >
               Cancel
             </button>
@@ -102,7 +102,7 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
         <div className="mb-4 flex justify-end">
           <button
             onClick={enterSelect}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 hover:text-zinc-100 uppercase tracking-widest transition-colors"
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-content uppercase tracking-widest transition-colors"
           >
             <CheckSquare size={14} />
             Select
@@ -116,8 +116,8 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
           const selected = selectedIds.has(record.id);
           const cover = (
             <div
-              className={`aspect-square bg-zinc-800 rounded-lg overflow-hidden mb-2 relative transition-all duration-150 ${
-                selected ? "ring-2 ring-amber-400" : ""
+              className={`aspect-square bg-card rounded-lg overflow-hidden mb-2 relative transition-all duration-150 ${
+                selected ? "ring-2 ring-accent" : ""
               }`}
             >
               {record.coverImage ? (
@@ -130,7 +130,7 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Disc3 size={40} className="text-zinc-600" />
+                  <Disc3 size={40} className="text-faint" />
                 </div>
               )}
 
@@ -140,12 +140,12 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                       selected
-                        ? "bg-amber-400 border-amber-400"
+                        ? "bg-accent border-accent"
                         : "bg-black/40 border-white/70 backdrop-blur-sm"
                     }`}
                   >
                     {selected && (
-                      <svg viewBox="0 0 10 8" className="w-3 h-3 fill-zinc-950">
+                      <svg viewBox="0 0 10 8" className="w-3 h-3 fill-accent-fg">
                         <path d="M1 4l2.5 2.5L9 1" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
@@ -158,8 +158,8 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
           const meta = (
             <>
               <p className="text-sm font-semibold leading-tight truncate tracking-wide">{record.title}</p>
-              <p className="text-[11px] text-zinc-500 uppercase tracking-wider truncate">{record.artist}</p>
-              {record.year && <p className="text-[11px] text-zinc-600 font-light">{record.year}</p>}
+              <p className="text-[11px] text-dim uppercase tracking-wider truncate">{record.artist}</p>
+              {record.year && <p className="text-[11px] text-faint font-light">{record.year}</p>}
             </>
           );
 

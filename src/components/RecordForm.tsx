@@ -284,21 +284,21 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       )}
 
       {/* Discogs search */}
-      <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
-        <p className="text-sm font-medium text-zinc-300">Search Discogs to auto-fill</p>
+      <div className="bg-surface rounded-xl p-4 space-y-3">
+        <p className="text-sm font-medium text-secondary">Search Discogs to auto-fill</p>
         <div className="flex gap-2">
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchDiscogs(searchQuery))}
             placeholder="Artist, title, or label…"
-            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-zinc-500"
+            className="flex-1 bg-card border border-subtle rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent placeholder:text-dim"
           />
           <button
             type="button"
             onClick={() => searchDiscogs(searchQuery)}
             disabled={searching}
-            className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors"
+            className="bg-subtle hover:bg-faint px-3 py-2 rounded-lg transition-colors"
           >
             {searching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
           </button>
@@ -308,7 +308,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               setScannerError(null);
               setShowScanner(true);
             }}
-            className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors"
+            className="bg-subtle hover:bg-faint px-3 py-2 rounded-lg transition-colors"
             title="Scan barcode"
           >
             <Barcode size={16} />
@@ -321,7 +321,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-xs"
+                className="bg-card hover:bg-subtle px-3 py-2 rounded-lg text-xs"
               >
                 Use photo upload instead
               </button>
@@ -331,7 +331,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                   setScannerError(null);
                   setShowScanner(true);
                 }}
-                className="bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-xs"
+                className="bg-card hover:bg-subtle px-3 py-2 rounded-lg text-xs"
               >
                 Retry scanner
               </button>
@@ -340,25 +340,25 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         )}
 
         {searchResults.length > 0 && (
-          <div className="bg-zinc-800 rounded-lg divide-y divide-zinc-700 max-h-60 overflow-y-auto">
+          <div className="bg-card rounded-lg divide-y divide-subtle max-h-60 overflow-y-auto">
             {searchResults.map((r) => (
               <button
                 key={r.id}
                 type="button"
                 onClick={() => loadDiscogsRelease(r.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-zinc-700 transition-colors text-left"
+                className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-subtle transition-colors text-left"
               >
                 {r.thumb ? (
                   <Image src={`/api/proxy-image?url=${encodeURIComponent(r.thumb)}`} alt="" width={40} height={40} unoptimized className="rounded shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 bg-zinc-700 rounded shrink-0 flex items-center justify-center">
-                    <Disc3 size={16} className="text-zinc-500" />
+                  <div className="w-10 h-10 bg-subtle rounded shrink-0 flex items-center justify-center">
+                    <Disc3 size={16} className="text-dim" />
                   </div>
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{r.title}</p>
                   {(r.year || r.catalogNumber) && (
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-muted">
                       {r.year && r.catalogNumber ? `${r.year} - cat. no. ${r.catalogNumber}` : r.year || `cat. no. ${r.catalogNumber}`}
                     </p>
                   )}
@@ -374,7 +374,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           <button
             type="button"
             onClick={() => setShowScanner(false)}
-            className="absolute top-2 right-2 z-10 bg-zinc-900 rounded-full p-1"
+            className="absolute top-2 right-2 z-10 bg-surface rounded-full p-1"
           >
             <X size={16} />
           </button>
@@ -384,9 +384,9 @@ export default function RecordForm({ record }: { record?: RecordData }) {
 
       {/* Cover image */}
       <div>
-        <p className="text-sm font-medium text-zinc-300 mb-2">Cover image</p>
+        <p className="text-sm font-medium text-secondary mb-2">Cover image</p>
         <div className="flex items-center gap-4">
-          <div className="w-24 h-24 bg-zinc-800 rounded-lg overflow-hidden relative shrink-0">
+          <div className="w-24 h-24 bg-card rounded-lg overflow-hidden relative shrink-0">
             {coverPreview ? (
               <Image
                 src={discogsCoverUrl ? `/api/proxy-image?url=${encodeURIComponent(coverPreview)}` : coverPreview}
@@ -397,7 +397,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Disc3 size={28} className="text-zinc-600" />
+                <Disc3 size={28} className="text-faint" />
               </div>
             )}
           </div>
@@ -405,7 +405,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 bg-card hover:bg-subtle px-3 py-2 rounded-lg text-sm transition-colors"
             >
               <Upload size={14} />
               Upload photo
@@ -459,9 +459,9 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             <div className="flex gap-2 flex-wrap">
               {/** tags */}
               {genreTags.map((t) => (
-                <span key={t} className="bg-zinc-800 text-zinc-400 text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                <span key={t} className="bg-card text-muted text-sm px-3 py-1 rounded-full flex items-center gap-2">
                   <span className="text-sm">{t}</span>
-                  <button type="button" onClick={() => removeTag(t)} className="text-zinc-500 hover:text-zinc-300">
+                  <button type="button" onClick={() => removeTag(t)} className="text-dim hover:text-secondary">
                     <X size={14} />
                   </button>
                 </span>
@@ -477,13 +477,13 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             </div>
 
             {genreSuggestions.length > 0 && (
-              <div className="bg-zinc-800 rounded-lg mt-2 divide-y divide-zinc-700 max-h-40 overflow-y-auto">
+              <div className="bg-card rounded-lg mt-2 divide-y divide-subtle max-h-40 overflow-y-auto">
                 {genreSuggestions.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => { addTag(s); setGenreInput(""); setGenreSuggestions([]); }}
-                    className="w-full text-left px-3 py-2 hover:bg-zinc-700"
+                    className="w-full text-left px-3 py-2 hover:bg-subtle"
                   >
                     {s}
                   </button>
@@ -518,7 +518,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
 
       {/* Rating */}
       <div>
-        <p className="text-sm font-medium text-zinc-300 mb-2">Rating</p>
+        <p className="text-sm font-medium text-secondary mb-2">Rating</p>
         <div className="flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <button
@@ -529,7 +529,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             >
               <Star
                 size={24}
-                className={i < rating ? "fill-amber-400 text-amber-400" : "text-zinc-600"}
+                className={i < rating ? "fill-accent text-accent" : "text-faint"}
               />
             </button>
           ))}
@@ -544,7 +544,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       {/* Tracklist */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-medium text-zinc-300">Tracklist</p>
+          <p className="text-sm font-medium text-secondary">Tracklist</p>
           <button
             type="button"
             onClick={() => {
@@ -554,7 +554,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               const nextNumber = getNextTrackNumber(tracks, currentSide);
               setTracks([...tracks, { position: `${currentSide}${nextNumber}`, title: "", duration: "" }]);
             }}
-            className="text-xs text-amber-400 hover:text-amber-300"
+            className="text-xs text-accent hover:text-accent-hover"
           >
             + Add track
           </button>
@@ -600,8 +600,8 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                     className={cn(
                       "px-2 py-1 rounded text-xs font-medium transition-colors",
                       currentSide === side
-                        ? "bg-amber-400 text-zinc-950"
-                        : "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                        ? "bg-accent text-accent-fg"
+                        : "bg-subtle text-secondary hover:bg-faint"
                     )}
                   >
                     {side}
@@ -629,7 +629,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               <button
                 type="button"
                 onClick={() => setTracks(tracks.filter((_, j) => j !== i))}
-                className="text-zinc-500 hover:text-red-400"
+                className="text-dim hover:text-red-400"
               >
                 <X size={16} />
               </button>
@@ -644,7 +644,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 bg-amber-400 text-zinc-950 font-semibold py-3 rounded-xl hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 bg-accent text-accent-fg font-semibold py-3 rounded-xl hover:bg-accent-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
         >
           {saving && <Loader2 size={16} className="animate-spin" />}
           {record ? "Save changes" : "Add to collection"}
@@ -652,7 +652,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex-1 bg-zinc-800 text-zinc-100 font-semibold py-3 rounded-xl hover:bg-zinc-700 transition-colors"
+          className="flex-1 bg-card text-content font-semibold py-3 rounded-xl hover:bg-subtle transition-colors"
         >
           Cancel
         </button>
@@ -661,14 +661,14 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   );
 }
 
-const inputCls = "w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 placeholder:text-zinc-500";
+const inputCls = "w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent placeholder:text-dim";
 
 function Field({ label, children, error, hint }: { label: string; children: React.ReactNode; error?: string; hint?: string }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-zinc-300 mb-1">
+      <label className="block text-sm font-medium text-secondary mb-1">
         {label}
-        {hint && <span className="text-zinc-500 font-normal ml-1 text-xs">{hint}</span>}
+        {hint && <span className="text-dim font-normal ml-1 text-xs">{hint}</span>}
       </label>
       {children}
       {error && <p className="text-red-400 text-xs mt-1">{error}</p>}

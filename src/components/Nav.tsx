@@ -79,7 +79,7 @@ export default function Nav() {
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 inset-x-0 z-50 h-14 bg-[var(--surface)] backdrop-blur border-b border-[var(--border)] flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2 text-[var(--foreground)]">
-          <Disc3 size={18} className="text-amber-400" />
+          <Disc3 size={18} className="text-accent" />
           <span className="font-bold text-xs tracking-widest uppercase">Vinyl</span>
         </Link>
         <button
@@ -116,7 +116,7 @@ export default function Nav() {
         >
           <div className="flex items-center justify-between mb-4">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Disc3 size={20} className="text-amber-400" />
+              <Disc3 size={20} className="text-accent" />
               <span className="font-bold text-sm tracking-widest uppercase">Vinyl</span>
             </Link>
             <div ref={mobileUserMenuRef} className="relative flex items-center gap-2">
@@ -191,8 +191,8 @@ export default function Nav() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors",
                   pathname.startsWith(href)
-                    ? "bg-amber-400/10 text-amber-400"
-                    : "text-zinc-500 hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+                    ? "bg-accent/10 text-accent"
+                    : "text-dim hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                 )}
               >
                 <Icon size={16} />
@@ -202,7 +202,7 @@ export default function Nav() {
           </div>
 
           <div className="mt-auto pt-4 border-t border-[var(--border)] px-3">
-            <p className="text-xs text-zinc-500 truncate">{session.user?.email}</p>
+            <p className="text-xs text-dim truncate">{session.user?.email}</p>
           </div>
         </nav>
       </div>
@@ -210,13 +210,13 @@ export default function Nav() {
       {/* Desktop sidebar */}
       <nav
         className={cn(
-          "hidden md:flex flex-col shrink-0 bg-zinc-900 border-r border-zinc-800 min-h-screen p-4 gap-1 transition-[width] duration-200",
+          "hidden md:flex flex-col shrink-0 bg-surface border-r border-card min-h-screen p-4 gap-1 transition-[width] duration-200",
           desktopCollapsed ? "w-20" : "w-56"
         )}
       >
         <div className={cn("mb-4", desktopCollapsed ? "space-y-2" : "flex items-center justify-between gap-2") }>
           <Link href="/dashboard" className={cn("flex items-center", desktopCollapsed ? "justify-center" : "gap-2 px-2 py-3")}>
-            <Disc3 size={22} className="text-amber-400" />
+            <Disc3 size={22} className="text-accent" />
             {!desktopCollapsed && <span className="font-bold text-sm tracking-widest uppercase">Vinyl</span>}
           </Link>
 
@@ -225,7 +225,7 @@ export default function Nav() {
             aria-label={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={toggleDesktopCollapsed}
             className={cn(
-              "inline-flex items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 p-2 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700 transition-colors",
+              "inline-flex items-center justify-center rounded-lg border border-subtle bg-card p-2 text-secondary hover:text-content hover:bg-subtle transition-colors",
               desktopCollapsed ? "w-full" : "shrink-0"
             )}
           >
@@ -242,8 +242,8 @@ export default function Nav() {
               "flex items-center rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors",
               desktopCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
               pathname.startsWith(href)
-                ? "bg-amber-400/10 text-amber-400"
-                : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                ? "bg-accent/10 text-accent"
+                : "text-muted hover:text-content hover:bg-card"
             )}
           >
             <Icon size={16} />

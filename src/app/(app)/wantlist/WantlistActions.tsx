@@ -14,7 +14,7 @@ export default function WantlistActions({ id }: { id: string }) {
   return (
     <button
       onClick={handleDelete}
-      className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+      className="text-dim hover:text-red-400 transition-colors p-1"
     >
       <Trash2 size={16} />
     </button>
