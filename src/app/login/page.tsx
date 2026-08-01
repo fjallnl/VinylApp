@@ -68,31 +68,31 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-10">
-          <Disc3 size={36} className="text-amber-400" />
+          <Disc3 size={36} className="text-accent" />
           <h1 className="text-xl font-bold uppercase tracking-widest">Vinyl Collection</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-zinc-900 rounded-2xl p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-surface rounded-2xl p-6 space-y-5">
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Email</label>
+            <label className="block text-[11px] font-semibold text-muted uppercase tracking-widest mb-2">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400"
+              className="w-full bg-card border border-subtle rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-accent"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Password</label>
+            <label className="block text-[11px] font-semibold text-muted uppercase tracking-widest mb-2">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400"
+              className="w-full bg-card border border-subtle rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -102,7 +102,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-400 text-zinc-950 font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-accent text-accent-fg font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             Sign In
@@ -111,16 +111,16 @@ export default function LoginPage() {
             type="button"
             onClick={handleResendVerification}
             disabled={resendLoading}
-            className="w-full bg-[var(--surface-strong)] border border-[var(--border)] text-[var(--muted)] font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:border-amber-400 hover:text-amber-400 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[var(--surface-strong)] border border-[var(--border)] text-[var(--muted)] font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:border-accent hover:text-accent disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {resendLoading && <Loader2 size={14} className="animate-spin" />}
             Resend Verification Email
           </button>
         </form>
 
-        <p className="text-center text-xs text-zinc-500 mt-6">
+        <p className="text-center text-xs text-dim mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-amber-400 hover:underline">
+          <Link href="/register" className="text-accent hover:underline">
             Create one
           </Link>
         </p>

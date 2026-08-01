@@ -16,14 +16,14 @@ export default function FavoriteAlbums({ records }: { records: FavoriteRecord[] 
 
   return (
     <section className="mb-10">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
-        <Star size={12} className="fill-amber-400 text-amber-400" />
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-dim mb-4 flex items-center gap-2">
+        <Star size={12} className="fill-accent text-accent" />
         Favorites
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {records.map((record) => (
           <Link key={record.id} href={`/record/${record.id}`} className="block group">
-            <div className="aspect-square bg-zinc-800 rounded-lg overflow-hidden mb-2 relative">
+            <div className="aspect-square bg-card rounded-lg overflow-hidden mb-2 relative">
               {record.coverImage ? (
                 <Image
                   src={coverUrl(record.coverImage)}
@@ -34,12 +34,12 @@ export default function FavoriteAlbums({ records }: { records: FavoriteRecord[] 
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Disc3 size={40} className="text-zinc-600" />
+                  <Disc3 size={40} className="text-faint" />
                 </div>
               )}
             </div>
             <p className="text-sm font-semibold leading-tight truncate tracking-wide">{record.title}</p>
-            <p className="text-[11px] text-zinc-500 uppercase tracking-wider truncate">{record.artist}</p>
+            <p className="text-[11px] text-dim uppercase tracking-wider truncate">{record.artist}</p>
           </Link>
         ))}
       </div>

@@ -33,8 +33,8 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 const inputClass =
-  "w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400";
-const labelClass = "block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2";
+  "w-full bg-card border border-subtle rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-accent";
+const labelClass = "block text-[11px] font-semibold text-muted uppercase tracking-widest mb-2";
 
 export default function RegisterPage() {
   const [serverError, setServerError] = useState("");
@@ -88,11 +88,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-3 mb-10">
-          <Disc3 size={36} className="text-amber-400" />
+          <Disc3 size={36} className="text-accent" />
           <h1 className="text-xl font-bold uppercase tracking-widest">Vinyl Collection</h1>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-zinc-900 rounded-2xl p-6 space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-surface rounded-2xl p-6 space-y-5">
           <div>
             <label className={labelClass}>Email</label>
             <input {...register("email")} type="email" autoComplete="email" className={inputClass} />
@@ -112,7 +112,7 @@ export default function RegisterPage() {
                     key={rule.id}
                     className={cn(
                       "text-xs transition-colors",
-                      rule.passed ? "text-amber-400" : "text-zinc-500"
+                      rule.passed ? "text-accent" : "text-dim"
                     )}
                   >
                     {rule.label}
@@ -127,7 +127,7 @@ export default function RegisterPage() {
             <input {...register("confirmPassword")} type="password" autoComplete="new-password" className={inputClass} />
             {showPasswordMatchRule && (
               <ul className="mt-2.5 space-y-1">
-                <li className={cn("text-xs transition-colors", passwordsMatch ? "text-amber-400" : "text-zinc-500")}>
+                <li className={cn("text-xs transition-colors", passwordsMatch ? "text-accent" : "text-dim")}>
                   Passwords match
                 </li>
               </ul>
@@ -141,22 +141,22 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-400 text-zinc-950 font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-amber-300 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-accent text-accent-fg font-bold text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             Create Account
           </button>
         </form>
 
-        <p className="text-center text-xs text-zinc-500 mt-6">
+        <p className="text-center text-xs text-dim mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-amber-400 hover:underline">
+          <Link href="/login" className="text-accent hover:underline">
             Sign in
           </Link>
         </p>
-        <p className="text-center text-xs text-zinc-500 mt-2">
+        <p className="text-center text-xs text-dim mt-2">
           Need a new verification email?{" "}
-          <Link href={`/login?email=${encodeURIComponent(getValues("email") || "")}`} className="text-amber-400 hover:underline">
+          <Link href={`/login?email=${encodeURIComponent(getValues("email") || "")}`} className="text-accent hover:underline">
             Resend it
           </Link>
         </p>

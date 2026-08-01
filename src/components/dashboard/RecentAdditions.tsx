@@ -17,7 +17,7 @@ export default function RecentAdditions({ records }: { records: RecentRecord[] }
 
   return (
     <section className="mb-10">
-      <h2 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-4">
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-dim mb-4">
         Recently Added
       </h2>
       <div className="flex flex-col gap-2">
@@ -25,9 +25,9 @@ export default function RecentAdditions({ records }: { records: RecentRecord[] }
           <Link
             key={record.id}
             href={`/record/${record.id}`}
-            className="flex items-center gap-4 bg-zinc-900 rounded-lg px-4 py-3 hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-4 bg-surface rounded-lg px-4 py-3 hover:bg-card transition-colors"
           >
-            <div className="w-12 h-12 bg-zinc-800 rounded-md overflow-hidden relative shrink-0">
+            <div className="w-12 h-12 bg-card rounded-md overflow-hidden relative shrink-0">
               {record.coverImage ? (
                 <Image
                   src={coverUrl(record.coverImage)}
@@ -38,18 +38,18 @@ export default function RecentAdditions({ records }: { records: RecentRecord[] }
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Disc3 size={24} className="text-zinc-600" />
+                  <Disc3 size={24} className="text-faint" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate tracking-wide">{record.title}</p>
-              <p className="text-[11px] text-zinc-500 uppercase tracking-wider truncate">
+              <p className="text-[11px] text-dim uppercase tracking-wider truncate">
                 {record.artist}
               </p>
             </div>
             {record.year && (
-              <span className="text-[11px] text-zinc-600 font-light shrink-0">{record.year}</span>
+              <span className="text-[11px] text-faint font-light shrink-0">{record.year}</span>
             )}
           </Link>
         ))}

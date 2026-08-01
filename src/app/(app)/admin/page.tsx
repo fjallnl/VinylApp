@@ -54,7 +54,7 @@ export default async function AdminPage() {
       <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold uppercase tracking-widest">Administration</h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+          <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             Manage users and genres
           </p>
         </div>

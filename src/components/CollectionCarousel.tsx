@@ -81,7 +81,7 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
 
   return (
     <div
-      className="relative w-full rounded-2xl overflow-hidden bg-zinc-950"
+      className="relative w-full rounded-2xl overflow-hidden bg-base"
       style={{ height: 520 }}
     >
       {/* ── STRIP VIEW ─────────────────────────────────────────────── */}
@@ -198,7 +198,7 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
               {current.rating && (
                 <div className="flex gap-1 mt-3">
                   {Array.from({ length: current.rating }).map((_, i) => (
-                    <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                    <Star key={i} size={13} className="fill-accent text-accent" />
                   ))}
                 </div>
               )}
@@ -239,7 +239,7 @@ export default function CollectionCarousel({ records }: { records: Record[] }) {
           </div>
 
           {/* Right: vinyl + blurred album art */}
-          <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-zinc-950">
+          <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-base">
             {/* Blurred album art atmosphere */}
             {coverSrc && (
               <Image

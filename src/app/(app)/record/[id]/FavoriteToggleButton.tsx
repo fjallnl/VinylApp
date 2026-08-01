@@ -36,9 +36,9 @@ export default function FavoriteToggleButton({
       type="button"
       onClick={toggleFavorite}
       disabled={isSaving}
-      className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800/70 px-4 max-[455px]:px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors"
+      className="flex items-center gap-2 bg-card hover:bg-subtle disabled:bg-card/70 px-4 max-[455px]:px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors"
     >
-      <Star size={13} className={favorite ? "fill-amber-400 text-amber-400" : "text-zinc-300"} />
+      <Star size={13} className={favorite ? "fill-accent text-accent" : "text-secondary"} />
       {favorite ? "Unfavorite" : "Favorite"}
     </button>
   );

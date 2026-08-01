@@ -29,8 +29,8 @@ const createSchema = z.object({
 type CreateForm = z.infer<typeof createSchema>;
 
 const inputClass =
-  "w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-amber-400 placeholder:text-zinc-600";
-const labelClass = "block text-xs uppercase tracking-widest text-zinc-500 mb-1.5";
+  "w-full px-3 py-2 bg-surface border border-subtle rounded-lg text-sm focus:outline-none focus:border-accent placeholder:text-faint";
+const labelClass = "block text-xs uppercase tracking-widest text-dim mb-1.5";
 
 export default function UserAdmin({
   users,
@@ -114,7 +114,7 @@ export default function UserAdmin({
     <section>
       <div className="mb-6">
         <h2 className="text-xl font-bold uppercase tracking-widest">Users</h2>
-        <p className="text-zinc-500 text-xs uppercase tracking-widest font-light mt-0.5">
+        <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
           {users.length} user{users.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -128,9 +128,9 @@ export default function UserAdmin({
       {/* Add user */}
       <form
         onSubmit={handleSubmit(onCreate)}
-        className="bg-zinc-800/50 border border-zinc-800 rounded-xl p-4 md:p-5 mb-8"
+        className="bg-card/50 border border-card rounded-xl p-4 md:p-5 mb-8"
       >
-        <h2 className="text-xs font-bold uppercase tracking-widest text-amber-400 mb-4 flex items-center gap-2">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-accent mb-4 flex items-center gap-2">
           <UserPlus size={14} />
           Add User
         </h2>
@@ -160,7 +160,7 @@ export default function UserAdmin({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-4 flex items-center gap-2 bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-amber-300 transition-colors disabled:opacity-50"
+          className="mt-4 flex items-center gap-2 bg-accent text-accent-fg font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-accent-hover transition-colors disabled:opacity-50"
         >
           {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
           Create User
@@ -173,7 +173,7 @@ export default function UserAdmin({
           const isSelf = user.id === currentUserId;
           const busy = busyId === user.id;
           return (
-            <div key={user.id} className="bg-zinc-800/50 border border-zinc-800 rounded-xl p-4">
+            <div key={user.id} className="bg-card/50 border border-card rounded-xl p-4">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -181,20 +181,20 @@ export default function UserAdmin({
                     <span
                       className={cn(
                         "flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
-                        user.role === "ADMIN" ? "bg-amber-400/10 text-amber-400" : "bg-zinc-700/50 text-zinc-400"
+                        user.role === "ADMIN" ? "bg-accent/10 text-accent" : "bg-subtle/50 text-muted"
                       )}
                     >
                       {user.role === "ADMIN" && <Shield size={10} />}
                       {user.role}
                     </span>
                     {isSelf && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-700/50 text-zinc-300">
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-subtle/50 text-secondary">
                         You
                       </span>
                     )}
                   </div>
-                  {user.name && <p className="text-xs text-zinc-500 truncate mt-0.5">{user.email}</p>}
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-500">
+                  {user.name && <p className="text-xs text-dim truncate mt-0.5">{user.email}</p>}
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-dim">
                     <span className="flex items-center gap-1">
                       <Disc3 size={12} /> {user._count.records}
                     </span>
@@ -210,7 +210,7 @@ export default function UserAdmin({
                     value={user.role}
                     disabled={busy}
                     onChange={(e) => changeRole(user, e.target.value as Role)}
-                    className="px-2 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg text-xs focus:outline-none focus:border-amber-400 disabled:opacity-50"
+                    className="px-2 py-1.5 bg-surface border border-subtle rounded-lg text-xs focus:outline-none focus:border-accent disabled:opacity-50"
                   >
                     <option value="USER">User</option>
                     <option value="ADMIN">Admin</option>
@@ -222,7 +222,7 @@ export default function UserAdmin({
                     }}
                     disabled={busy}
                     title="Reset password"
-                    className="p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                    className="p-2 rounded-lg text-muted hover:text-accent hover:bg-card transition-colors disabled:opacity-50"
                   >
                     <KeyRound size={15} />
                   </button>
@@ -230,7 +230,7 @@ export default function UserAdmin({
                     onClick={() => setDeletingId(deletingId === user.id ? null : user.id)}
                     disabled={busy || isSelf}
                     title={isSelf ? "You cannot delete your own account" : "Delete user"}
-                    className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors disabled:opacity-30"
+                    className="p-2 rounded-lg text-muted hover:text-red-400 hover:bg-card transition-colors disabled:opacity-30"
                   >
                     {busy ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                   </button>
@@ -238,8 +238,8 @@ export default function UserAdmin({
               </div>
 
               {deletingId === user.id && (
-                <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-zinc-400">
+                <div className="mt-3 pt-3 border-t border-card flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-muted">
                     Delete {user.email} and their {user._count.records} record(s) and {user._count.wantlist}{" "}
                     wantlist item(s)? This cannot be undone.
                   </span>
@@ -253,7 +253,7 @@ export default function UserAdmin({
                   <button
                     onClick={() => setDeletingId(null)}
                     disabled={busy}
-                    className="bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50"
+                    className="bg-card hover:bg-subtle px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50"
                   >
                     No
                   </button>
@@ -261,7 +261,7 @@ export default function UserAdmin({
               )}
 
               {passwordFor === user.id && (
-                <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center gap-2">
+                <div className="mt-3 pt-3 border-t border-card flex items-center gap-2">
                   <input
                     type="password"
                     value={newPassword}
@@ -272,7 +272,7 @@ export default function UserAdmin({
                   <button
                     onClick={() => resetPassword(user)}
                     disabled={busy}
-                    className="bg-amber-400 text-zinc-950 font-bold px-3 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-amber-300 transition-colors disabled:opacity-50"
+                    className="bg-accent text-accent-fg font-bold px-3 py-2 rounded-lg text-xs uppercase tracking-widest hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
                     Save
                   </button>

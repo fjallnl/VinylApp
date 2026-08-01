@@ -47,7 +47,7 @@ export default function DesktopUserMenu() {
         aria-expanded={open}
         className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--foreground)] shadow-lg backdrop-blur transition-colors hover:bg-[var(--surface-muted)]"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-zinc-300">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-secondary">
           <User size={14} />
         </span>
         <span className="max-w-36 truncate">{firstName}</span>
