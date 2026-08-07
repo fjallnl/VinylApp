@@ -16,10 +16,10 @@ export default async function WantlistPage() {
   });
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold uppercase tracking-widest">Wantlist</h1>
+          <h1 className="text-2xl font-bold uppercase tracking-widest">Your Wantlist</h1>
           <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             {items.length} item{items.length !== 1 ? "s" : ""}
           </p>
