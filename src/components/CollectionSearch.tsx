@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Disc3, Search } from "lucide-react";
+import { Disc3, Search, SlidersHorizontal } from "lucide-react";
 import CollectionGrid from "@/components/CollectionGrid";
 
 type CollectionRecord = {
@@ -42,6 +42,7 @@ const labelClass = "mb-1.5 block text-[11px] font-semibold uppercase tracking-wi
 export default function CollectionSearch({ initialRecords }: { initialRecords: CollectionRecord[] }) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
 
   const yearOptions = useMemo(
     () =>
@@ -122,17 +123,37 @@ export default function CollectionSearch({ initialRecords }: { initialRecords: C
       </p>
 
       <div className="mb-6 space-y-3">
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search artist, title, year, label, genre, country…"
-            className={`${inputClass} pl-9 pr-4`}
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search artist, title, year, label, genre, country…"
+              className={`${inputClass} pl-9 pr-4`}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-label={showFilters ? "Hide filters" : "Show filters"}
+            aria-expanded={showFilters}
+            className={`relative flex items-center gap-1.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+              showFilters
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-subtle bg-surface text-dim hover:text-content"
+            }`}
+          >
+            <SlidersHorizontal size={15} />
+            <span className="hidden sm:inline">Filters</span>
+            {Object.values(filters).some(Boolean) && (
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
+            )}
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {showFilters && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <div>
             <label htmlFor="artist-filter" className={labelClass}>
               Artist
@@ -229,6 +250,7 @@ export default function CollectionSearch({ initialRecords }: { initialRecords: C
             </select>
           </div>
         </div>
+        )}
 
         {hasActiveFilters && (
           <div className="flex justify-end">
