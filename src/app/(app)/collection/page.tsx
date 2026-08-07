@@ -36,7 +36,7 @@ export default async function CollectionPage({
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold uppercase tracking-widest">Collection</h1>
+          <h1 className="text-2xl font-bold uppercase tracking-widest">Your Collection</h1>
           <p className="text-dim text-xs uppercase tracking-widest font-light mt-0.5">
             {records.length} record{records.length !== 1 ? "s" : ""}
           </p>

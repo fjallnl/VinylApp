@@ -16,7 +16,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   if (!record) notFound();
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold">Edit Record</h1>
         <div className="hidden md:block">

@@ -27,7 +27,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
     : `https://www.discogs.com/search/?type=release&q=${discogsSearchQuery}`;
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Link href="/collection" className="text-muted hover:text-content shrink-0">

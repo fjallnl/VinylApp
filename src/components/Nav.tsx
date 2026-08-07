@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/collection", label: "Collection", icon: Disc3 },
-  { href: "/showcase", label: "Showcase", icon: GalleryHorizontal },
+  // { href: "/showcase", label: "Showcase", icon: GalleryHorizontal },
   { href: "/wantlist", label: "Wantlist", icon: Heart },
   { href: "/add", label: "Add Record", icon: PlusCircle },
 ];
