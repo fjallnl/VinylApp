@@ -11,7 +11,17 @@ export default async function CollectionPage() {
   const session = await auth();
   const records = await prisma.record.findMany({
     where: { userId: session!.user!.id },
-    select: { id: true, title: true, artist: true, year: true, coverImage: true, rating: true },
+    select: {
+      id: true,
+      title: true,
+      artist: true,
+      year: true,
+      label: true,
+      genre: true,
+      country: true,
+      coverImage: true,
+      rating: true,
+    },
     orderBy: [{ artist: "asc" }, { title: "asc" }],
   });
 
