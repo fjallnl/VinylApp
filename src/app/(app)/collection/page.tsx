@@ -127,7 +127,6 @@ export default async function CollectionPage({
           let timer;
           const updateSearch = () => {
             const value = input.value.trim();
-            if (value.length > 0 && value.length < 3) return;
 
             const url = new URL(window.location.href);
             if (value.length >= 3) {
