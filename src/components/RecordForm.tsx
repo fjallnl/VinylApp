@@ -388,8 +388,8 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       {/* Cover image */}
       <div>
         <p className="text-sm font-medium text-secondary mb-2">Cover image</p>
-        <div className="flex items-center gap-4">
-          <div className="w-64 h-64 bg-card rounded-lg overflow-hidden relative shrink-0">
+        <div className="w-full sm:w-64">
+          <div className="w-full aspect-square bg-card rounded-lg overflow-hidden relative shrink-0">
             {coverPreview ? (
               <Image
                 src={discogsCoverUrl ? `/api/proxy-image?url=${encodeURIComponent(coverPreview)}` : coverPreview}
@@ -404,11 +404,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="mt-2 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-2 bg-card hover:bg-subtle px-3 py-2 rounded-lg text-sm transition-colors"
+              className="inline-flex items-center gap-2 bg-card hover:bg-subtle px-3 py-2 rounded-lg text-sm transition-colors border border-subtle"
             >
               <Upload size={14} />
               Upload photo
@@ -425,8 +425,9 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               <button
                 type="button"
                 onClick={() => { setCoverPreview(null); setCoverFile(null); }}
-                className="text-xs text-red-400 hover:text-red-300 text-left"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-700/70 bg-rose-900/30 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-900/50 transition-colors"
               >
+                <X size={14} />
                 Remove
               </button>
             )}
