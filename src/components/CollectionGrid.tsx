@@ -3,21 +3,80 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Disc3, Trash2, CheckSquare } from "lucide-react";
 import { coverUrl } from "@/lib/s3";
 
-interface Record {
+type CollectionViewMode = "grid" | "grid-large" | "grid-small" | "list";
+
+interface CollectionRecord {
   id: string;
   title: string;
   artist: string;
   year?: number | null;
+  label?: string | null;
+  country?: string | null;
+  genre?: string[];
+  tracks?: { position?: string | null }[];
   coverImage?: string | null;
 }
 
-export default function CollectionGrid({ records }: { records: Record[] }) {
+function getVinylCountFromTracks(tracks?: { position?: string | null }[]) {
+  if (!tracks?.length) return 1;
+
+  const uniqueSides = new Set(
+    tracks
+      .map((track) => track.position?.trim().charAt(0).toUpperCase())
+      .filter((side): side is string => Boolean(side && /[A-Z]/.test(side)))
+  );
+
+  if (uniqueSides.size === 0) return 1;
+
+  return Math.max(1, Math.ceil(uniqueSides.size / 2));
+}
+
+export default function CollectionGrid({
+  records,
+  viewMode = "grid",
+}: {
+  records: CollectionRecord[];
+  viewMode?: CollectionViewMode;
+}) {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentCollectionUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+
+  const getRecordHref = (id: string) =>
+    `/record/${id}?returnTo=${encodeURIComponent(currentCollectionUrl)}`;
+
+  const gridClassByMode: Record<CollectionViewMode, string> = {
+    grid: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5",
+    "grid-large": "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+    "grid-small": "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6",
+    list: "grid-cols-1",
+  };
+
+  const coverClassByMode: Record<Exclude<CollectionViewMode, "list">, string> = {
+    grid: "aspect-square",
+    "grid-large": "aspect-square",
+    "grid-small": "aspect-[1/1]",
+  };
+
+  const titleClassByMode: Record<Exclude<CollectionViewMode, "list">, string> = {
+    grid: "text-sm",
+    "grid-large": "text-base",
+    "grid-small": "text-xs",
+  };
+
+  const metaClassByMode: Record<Exclude<CollectionViewMode, "list">, string> = {
+    grid: "text-[11px]",
+    "grid-large": "text-xs",
+    "grid-small": "text-[10px]",
+  };
 
   const enterSelect = () => setSelectMode(true);
 
@@ -110,13 +169,105 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
         </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {/* Grid / list */}
+      <div className={`grid gap-4 ${gridClassByMode[viewMode]}`}>
         {records.map((record) => {
           const selected = selectedIds.has(record.id);
+
+          if (viewMode === "list") {
+            const row = (
+              <div
+                className={`relative overflow-hidden rounded-lg border border-subtle bg-card p-3 transition-colors ${
+                  selected ? "ring-2 ring-accent" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-surface">
+                    {record.coverImage ? (
+                      <Image
+                        src={coverUrl(record.coverImage)}
+                        alt={record.title}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Disc3 size={24} className="text-faint" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2">
+                      <p className="truncate text-sm font-semibold tracking-wide">{record.title}</p>
+                      <p className="truncate text-[11px] uppercase tracking-wider text-dim">{record.artist}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-faint sm:grid-cols-4">
+                      <p>
+                        <span className="text-dim">Year:</span> {record.year ?? "-"}
+                      </p>
+                      <p>
+                        <span className="text-dim">Label:</span> {record.label ?? "-"}
+                      </p>
+                      <p>
+                        <span className="text-dim">Country:</span> {record.country ?? "-"}
+                      </p>
+                      <p>
+                        <span className="text-dim">Genre:</span> {record.genre?.join(", ") || "-"}
+                      </p>
+                      <p>
+                        <span className="text-dim">Vinyls:</span> {getVinylCountFromTracks(record.tracks)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectMode && (
+                    <div className="ml-2 shrink-0">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+                          selected
+                            ? "border-accent bg-accent"
+                            : "border-white/70 bg-black/40 backdrop-blur-sm"
+                        }`}
+                      >
+                        {selected && (
+                          <svg viewBox="0 0 10 8" className="h-3 w-3 fill-accent-fg">
+                            <path
+                              d="M1 4l2.5 2.5L9 1"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+
+            return (
+              <div key={record.id} className="relative group">
+                {selectMode ? (
+                  <button className="block w-full text-left" onClick={() => toggleSelect(record.id)}>
+                    {row}
+                  </button>
+                ) : (
+                  <Link href={getRecordHref(record.id)} className="block">
+                    {row}
+                  </Link>
+                )}
+              </div>
+            );
+          }
+
           const cover = (
             <div
-              className={`aspect-square bg-card rounded-lg overflow-hidden mb-2 relative transition-all duration-150 ${
+              className={`${coverClassByMode[viewMode]} bg-card rounded-lg overflow-hidden mb-2 relative transition-all duration-150 ${
                 selected ? "ring-2 ring-accent" : ""
               }`}
             >
@@ -157,9 +308,13 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
 
           const meta = (
             <>
-              <p className="text-sm font-semibold leading-tight truncate tracking-wide">{record.title}</p>
-              <p className="text-[11px] text-dim uppercase tracking-wider truncate">{record.artist}</p>
-              {record.year && <p className="text-[11px] text-faint font-light">{record.year}</p>}
+              <p className={`${titleClassByMode[viewMode]} font-semibold leading-tight truncate tracking-wide`}>
+                {record.title}
+              </p>
+              <p className={`${metaClassByMode[viewMode]} text-dim uppercase tracking-wider truncate`}>
+                {record.artist}
+              </p>
+              {record.year && <p className={`${metaClassByMode[viewMode]} text-faint font-light`}>{record.year}</p>}
             </>
           );
 
@@ -174,7 +329,7 @@ export default function CollectionGrid({ records }: { records: Record[] }) {
                   {meta}
                 </button>
               ) : (
-                <Link href={`/record/${record.id}`} className="block">
+                <Link href={getRecordHref(record.id)} className="block">
                   {cover}
                   {meta}
                 </Link>
