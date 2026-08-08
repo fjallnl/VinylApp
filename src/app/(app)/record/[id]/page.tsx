@@ -9,9 +9,24 @@ import DeleteRecordButton from "./DeleteRecordButton";
 import FavoriteToggleButton from "./FavoriteToggleButton";
 import DesktopUserMenu from "@/components/DesktopUserMenu";
 
-export default async function RecordPage({ params }: { params: Promise<{ id: string }> }) {
+function getCollectionBackHref(returnTo: string | string[] | undefined) {
+  const candidate = Array.isArray(returnTo) ? returnTo[0] : returnTo;
+  if (!candidate) return "/collection";
+  if (!candidate.startsWith("/collection")) return "/collection";
+  return candidate;
+}
+
+export default async function RecordPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
   const session = await auth();
   const { id } = await params;
+  const { returnTo } = await searchParams;
+  const backHref = getCollectionBackHref(returnTo);
 
   const record = await prisma.record.findFirst({
     where: { id, userId: session!.user!.id },
@@ -30,7 +45,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <Link href="/collection" className="text-muted hover:text-content shrink-0">
+          <Link href={backHref} className="text-muted hover:text-content shrink-0">
             <ArrowLeft size={18} />
           </Link>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-dim">{record.artist}</p>

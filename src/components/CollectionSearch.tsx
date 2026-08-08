@@ -1,9 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Disc3, Search, SlidersHorizontal } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Disc3,
+  Grid2x2,
+  Grid3x3,
+  LayoutGrid,
+  List,
+  type LucideIcon,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import CollectionGrid from "@/components/CollectionGrid";
+
+type CollectionViewMode = "grid" | "grid-large" | "grid-small" | "list";
 
 type CollectionRecord = {
   id: string;
@@ -13,8 +25,10 @@ type CollectionRecord = {
   label: string | null;
   genre: string[];
   country: string | null;
+  format: string | null;
   coverImage: string | null;
   rating: number | null;
+  tracks: { position: string | null }[];
 };
 
 type Filters = {
@@ -39,10 +53,88 @@ const inputClass =
   "w-full rounded-lg border border-subtle bg-surface px-3 py-2.5 text-sm focus:border-accent focus:outline-none placeholder:text-faint";
 const labelClass = "mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-dim";
 
+const VIEW_MODES: CollectionViewMode[] = ["grid", "grid-large", "grid-small", "list"];
+
+function parseFilters(params: URLSearchParams): Filters {
+  return {
+    artist: params.get("artist") ?? "",
+    title: params.get("title") ?? "",
+    year: params.get("year") ?? "",
+    label: params.get("label") ?? "",
+    genre: params.get("genre") ?? "",
+    country: params.get("country") ?? "",
+  };
+}
+
+function parseViewMode(params: URLSearchParams): CollectionViewMode {
+  const view = params.get("view");
+  if (view && VIEW_MODES.includes(view as CollectionViewMode)) {
+    return view as CollectionViewMode;
+  }
+  return "grid";
+}
+
+function buildQueryParams(search: string, filters: Filters, viewMode: CollectionViewMode): URLSearchParams {
+  const params = new URLSearchParams();
+  const normalizedSearch = search.trim();
+
+  if (normalizedSearch) params.set("q", normalizedSearch);
+  if (filters.artist.trim()) params.set("artist", filters.artist.trim());
+  if (filters.title.trim()) params.set("title", filters.title.trim());
+  if (filters.year) params.set("year", filters.year);
+  if (filters.label.trim()) params.set("label", filters.label.trim());
+  if (filters.genre) params.set("genre", filters.genre);
+  if (filters.country) params.set("country", filters.country);
+  if (viewMode !== "grid") params.set("view", viewMode);
+
+  return params;
+}
+
 export default function CollectionSearch({ initialRecords }: { initialRecords: CollectionRecord[] }) {
-  const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  const [filters, setFilters] = useState<Filters>(() => parseFilters(new URLSearchParams(searchParams.toString())));
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<CollectionViewMode>(() =>
+    parseViewMode(new URLSearchParams(searchParams.toString()))
+  );
+  const [showViewMenu, setShowViewMenu] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const next = buildQueryParams(search, filters, viewMode);
+    const nextQuery = next.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery === currentQuery) return;
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [filters, pathname, router, search, searchParams, viewMode]);
+
+  useEffect(() => {
+    if (!showViewMenu) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!viewMenuRef.current?.contains(event.target as Node)) {
+        setShowViewMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [showViewMenu]);
+
+  const viewOptions: Array<{ mode: CollectionViewMode; label: string; icon: LucideIcon }> = [
+    { mode: "grid", label: "Grid", icon: LayoutGrid },
+    { mode: "grid-large", label: "Large Grid", icon: Grid2x2 },
+    { mode: "grid-small", label: "Small Grid", icon: Grid3x3 },
+    { mode: "list", label: "List", icon: List },
+  ];
+
+  const selectedViewOption = viewOptions.find((option) => option.mode === viewMode) ?? viewOptions[0];
+  const SelectedViewIcon = selectedViewOption.icon;
 
   const yearOptions = useMemo(
     () =>
@@ -133,19 +225,67 @@ export default function CollectionSearch({ initialRecords }: { initialRecords: C
               className={`${inputClass} pl-9 pr-4`}
             />
           </div>
+          <div className="relative" ref={viewMenuRef}>
+            <button
+              type="button"
+              aria-label="Views"
+              aria-haspopup="menu"
+              aria-expanded={showViewMenu}
+              onClick={() => setShowViewMenu((v) => !v)}
+              className={`relative flex h-[42px] w-[42px] items-center justify-center rounded-lg border transition-colors ${
+                showViewMenu
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-subtle bg-surface text-dim hover:text-content"
+              }`}
+            >
+              <SelectedViewIcon size={16} />
+            </button>
+            {showViewMenu && (
+              <div
+                role="menu"
+                aria-label="View options"
+                className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-lg border border-subtle bg-surface shadow-lg"
+              >
+                {viewOptions.map((option) => {
+                  const OptionIcon = option.icon;
+                  const active = option.mode === viewMode;
+
+                  return (
+                    <button
+                      key={option.mode}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={active}
+                      onClick={() => {
+                        setViewMode(option.mode);
+                        setShowViewMenu(false);
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                        active
+                          ? "bg-accent/10 text-accent"
+                          : "text-dim hover:bg-subtle hover:text-content"
+                      }`}
+                    >
+                      <OptionIcon size={15} />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
             aria-label={showFilters ? "Hide filters" : "Show filters"}
             aria-expanded={showFilters}
-            className={`relative flex items-center gap-1.5 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+            className={`relative flex h-[42px] w-[42px] items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
               showFilters
                 ? "border-accent bg-accent/10 text-accent"
                 : "border-subtle bg-surface text-dim hover:text-content"
             }`}
           >
             <SlidersHorizontal size={15} />
-            <span className="hidden sm:inline">Filters</span>
             {Object.values(filters).some(Boolean) && (
               <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
             )}
@@ -279,7 +419,7 @@ export default function CollectionSearch({ initialRecords }: { initialRecords: C
           )}
         </div>
       ) : (
-        <CollectionGrid records={filteredRecords} />
+        <CollectionGrid records={filteredRecords} viewMode={viewMode} />
       )}
     </>
   );

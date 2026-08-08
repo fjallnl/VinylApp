@@ -19,8 +19,14 @@ export default async function CollectionPage() {
       label: true,
       genre: true,
       country: true,
+      format: true,
       coverImage: true,
       rating: true,
+      tracks: {
+        select: {
+          position: true,
+        },
+      },
     },
     orderBy: [{ artist: "asc" }, { title: "asc" }],
   });
