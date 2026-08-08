@@ -9,6 +9,7 @@ import { Search, Camera, Barcode, Loader2, X, Star, Upload, Disc3 } from "lucide
 import { cn, CONDITIONS } from "@/lib/utils";
 import BarcodeScanner from "./BarcodeScanner";
 import Image from "next/image";
+import { coverUrl } from "@/lib/s3";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -57,7 +58,9 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [tracks, setTracks] = useState<Track[]>(
     record?.tracks.map((t) => ({ position: t.position ?? "", title: t.title, duration: t.duration ?? "" })) ?? []
   );
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(
+    record?.coverImage ? coverUrl(record.coverImage) : null
+  );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [discogsCoverUrl, setDiscogsCoverUrl] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(record?.rating ?? 0);
@@ -386,7 +389,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       <div>
         <p className="text-sm font-medium text-secondary mb-2">Cover image</p>
         <div className="flex items-center gap-4">
-          <div className="w-24 h-24 bg-card rounded-lg overflow-hidden relative shrink-0">
+          <div className="w-64 h-64 bg-card rounded-lg overflow-hidden relative shrink-0">
             {coverPreview ? (
               <Image
                 src={discogsCoverUrl ? `/api/proxy-image?url=${encodeURIComponent(coverPreview)}` : coverPreview}
