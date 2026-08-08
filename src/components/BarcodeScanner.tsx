@@ -92,14 +92,18 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
         />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {!cameraError ? (
-            <div className="w-64 h-32 border-2 border-accent rounded-lg opacity-80" />
+            <div className="w-64 h-32 rounded-lg border-2 border-white/95 shadow-[0_0_0_2px_rgba(0,0,0,0.45)]" />
           ) : (
             <div className="bg-black/70 p-4 rounded-lg text-center">
               <p className="text-xs text-red-300">{cameraError}</p>
             </div>
           )}
         </div>
-        <p className="text-center text-xs text-muted py-2">Point camera at barcode</p>
+        {!cameraError && (
+          <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/75 px-3 py-1">
+            <p className="text-xs font-medium text-white">Point camera at barcode</p>
+          </div>
+        )}
       </div>
 
       <div className="text-center">

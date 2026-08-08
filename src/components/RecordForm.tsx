@@ -9,6 +9,7 @@ import { Search, Camera, Barcode, Loader2, X, Star, Upload, Disc3 } from "lucide
 import { cn, CONDITIONS } from "@/lib/utils";
 import BarcodeScanner from "./BarcodeScanner";
 import Image from "next/image";
+import { coverUrl } from "@/lib/s3";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -53,11 +54,13 @@ interface RecordData {
 export default function RecordForm({ record }: { record?: RecordData }) {
   const router = useRouter();
   const [searching, setSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; thumb: string; catalogNumber?: string | null }[]>([]);
+  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; country: string; label: string; thumb: string; catalogNumber?: string | null }[]>([]);
   const [tracks, setTracks] = useState<Track[]>(
     record?.tracks.map((t) => ({ position: t.position ?? "", title: t.title, duration: t.duration ?? "" })) ?? []
   );
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(
+    record?.coverImage ? coverUrl(record.coverImage) : null
+  );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [discogsCoverUrl, setDiscogsCoverUrl] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(record?.rating ?? 0);
@@ -66,7 +69,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchRateLimitedUntil, setSearchRateLimitedUntil] = useState<number | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const [genreTags, setGenreTags] = useState<string[]>(record?.genre ?? []);
   const [genreInput, setGenreInput] = useState("");
@@ -136,17 +143,100 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   }, [genreTags, setValue]);
 
   async function searchDiscogs(query: string) {
-    if (!query.trim()) return;
-    setSearching(true);
-    setSearchResults([]);
-    try {
-      const res = await fetch(`/api/discogs/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setSearchResults(data.results ?? []);
-    } finally {
+    const normalized = query.trim();
+    if (normalized.length < 3) {
+      setSearchResults([]);
       setSearching(false);
+      setSearchError(null);
+      setSearchRateLimitedUntil(null);
+      setHasSearched(false);
+      return;
+    }
+
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    setSearching(true);
+    setSearchError(null);
+    try {
+      const res = await fetch(`/api/discogs/search?q=${encodeURIComponent(normalized)}`, { signal: controller.signal });
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfterSeconds = Number(data.retryAfterSeconds ?? 0);
+        if (retryAfterSeconds > 0) {
+          setSearchRateLimitedUntil(Date.now() + retryAfterSeconds * 1000);
+          setSearchError(`Search is temporarily rate-limited. Try again in ${retryAfterSeconds}s.`);
+        } else {
+          setSearchError("Search is temporarily rate-limited. Please try again soon.");
+        }
+        setSearchResults([]);
+        setHasSearched(true);
+        return;
+      }
+      if (!res.ok) throw new Error(`Discogs search failed (${res.status})`);
+      const data = await res.json();
+      setSearchRateLimitedUntil(null);
+      setSearchResults(data.results ?? []);
+      setHasSearched(true);
+    } catch {
+      if (controller.signal.aborted) return;
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        setSearchError("You are offline. Reconnect to search Discogs.");
+      } else {
+        setSearchError("Discogs search is currently unavailable.");
+      }
+      setSearchResults([]);
+      setHasSearched(true);
+    } finally {
+      if (!controller.signal.aborted) {
+        setSearching(false);
+      }
     }
   }
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 3) {
+      setSearchResults([]);
+      setSearching(false);
+      setSearchError(null);
+      setSearchRateLimitedUntil(null);
+      setHasSearched(false);
+      searchAbortRef.current?.abort();
+      return;
+    }
+
+    const rateLimitedRemainingMs = searchRateLimitedUntil ? searchRateLimitedUntil - Date.now() : 0;
+    if (rateLimitedRemainingMs > 0) return;
+
+    const timeout = setTimeout(() => {
+      void searchDiscogs(q);
+    }, 450);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery, searchRateLimitedUntil]);
+
+  useEffect(() => {
+    if (!searchRateLimitedUntil) return;
+    const remainingMs = searchRateLimitedUntil - Date.now();
+    if (remainingMs <= 0) {
+      setSearchRateLimitedUntil(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSearchRateLimitedUntil(null);
+    }, remainingMs);
+
+    return () => clearTimeout(timeout);
+  }, [searchRateLimitedUntil]);
+
+  useEffect(() => {
+    return () => {
+      searchAbortRef.current?.abort();
+    };
+  }, []);
 
   async function loadDiscogsRelease(id: number) {
     setSearching(true);
@@ -290,6 +380,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (showScanner) {
+                setShowScanner(false);
+              }
+            }}
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchDiscogs(searchQuery))}
             placeholder="Artist, title, or label…"
             className="flex-1 bg-card border border-subtle rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent placeholder:text-dim"
@@ -314,6 +409,16 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             <Barcode size={16} />
           </button>
         </div>
+        <p className="text-xs text-dim">Suggestions appear while typing (minimum 3 characters).</p>
+        {searching && <p className="text-xs text-muted">Searching Discogs…</p>}
+        {searchError && (
+          <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 text-sm text-rose-200">
+            <p>{searchError}</p>
+          </div>
+        )}
+        {!searching && !searchError && hasSearched && searchQuery.trim().length >= 3 && searchResults.length === 0 && (
+          <p className="text-sm text-muted">No Discogs matches found.</p>
+        )}
         {scannerError && (
           <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 mt-3 text-sm text-rose-200">
             <p>{scannerError}</p>
@@ -346,7 +451,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                 key={r.id}
                 type="button"
                 onClick={() => loadDiscogsRelease(r.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-subtle transition-colors text-left"
+                className="flex items-start gap-3 w-full px-3 py-2.5 hover:bg-subtle transition-colors text-left"
               >
                 {r.thumb ? (
                   <Image src={`/api/proxy-image?url=${encodeURIComponent(r.thumb)}`} alt="" width={40} height={40} unoptimized className="rounded shrink-0" />
@@ -355,13 +460,14 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                     <Disc3 size={16} className="text-dim" />
                   </div>
                 )}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{r.title}</p>
-                  {(r.year || r.catalogNumber) && (
-                    <p className="text-xs text-muted">
-                      {r.year && r.catalogNumber ? `${r.year} - cat. no. ${r.catalogNumber}` : r.year || `cat. no. ${r.catalogNumber}`}
-                    </p>
-                  )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-5 truncate">{r.title}</p>
+                  <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted leading-4">
+                    {r.country && <span className="truncate max-w-[7rem] sm:max-w-[10rem]">{r.country}</span>}
+                    {r.label && <span className="truncate max-w-[8rem] sm:max-w-[12rem]">{r.label}</span>}
+                    {r.year && <span>{r.year}</span>}
+                    {r.catalogNumber && <span className="whitespace-nowrap">cat. no. {r.catalogNumber}</span>}
+                  </div>
                 </div>
               </button>
             ))}
@@ -385,8 +491,8 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       {/* Cover image */}
       <div>
         <p className="text-sm font-medium text-secondary mb-2">Cover image</p>
-        <div className="flex items-center gap-4">
-          <div className="w-24 h-24 bg-card rounded-lg overflow-hidden relative shrink-0">
+        <div className="w-full sm:w-64">
+          <div className="w-full aspect-square bg-card rounded-lg overflow-hidden relative shrink-0">
             {coverPreview ? (
               <Image
                 src={discogsCoverUrl ? `/api/proxy-image?url=${encodeURIComponent(coverPreview)}` : coverPreview}
@@ -401,11 +507,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="mt-2 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-2 bg-card hover:bg-subtle px-3 py-2 rounded-lg text-sm transition-colors"
+              className="inline-flex items-center gap-2 bg-card hover:bg-subtle px-3 py-2 rounded-lg text-sm transition-colors border border-subtle"
             >
               <Upload size={14} />
               Upload photo
@@ -422,8 +528,9 @@ export default function RecordForm({ record }: { record?: RecordData }) {
               <button
                 type="button"
                 onClick={() => { setCoverPreview(null); setCoverFile(null); }}
-                className="text-xs text-red-400 hover:text-red-300 text-left"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-700/70 bg-rose-900/30 px-3 py-2 text-sm font-medium text-rose-200 hover:bg-rose-900/50 transition-colors"
               >
+                <X size={14} />
                 Remove
               </button>
             )}
