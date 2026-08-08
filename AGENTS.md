@@ -72,6 +72,9 @@ VinylApp/
 ### Security & Credentials
 - **Zero Secrets in Code**: Never commit API tokens, client secrets, or database URLs. Use `.env.local` for local secrets and read them exclusively via `process.env`.
 
+### General
+- Provide minimal diffs or targeted file edits only. Do not rewrite unmodified boilerplate or re-export existing functions
+
 ---
 
 ## 5. Domain Rules & Definitions
@@ -121,3 +124,4 @@ When generating code for this repository:
 2. Ensure full accessibility (ARIA labels on icon-only buttons, proper `alt` tags on vinyl covers).
 3. Always check if a relevant type definition exists in `src/types/` before introducing new data shapes.
 4. Add unit test skeletons in `tests/` for newly created utility helper functions.
+
