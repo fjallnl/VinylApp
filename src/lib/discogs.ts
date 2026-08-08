@@ -25,6 +25,11 @@ export interface DiscogsRelease {
   barcodes?: { type: string; value: string }[];
 }
 
+type DiscogsSearchOptions = {
+  perPage?: number;
+  enrichMissingThumbs?: boolean;
+};
+
 type DiscogsSearchResult = {
   id: number;
   title: string;
@@ -55,12 +60,16 @@ async function getReleaseThumb(id: number): Promise<string | null> {
   return primaryImage?.uri150 ?? primaryImage?.uri ?? null;
 }
 
-export async function searchDiscogs(query: string) {
-  const url = `${BASE}/database/search?q=${encodeURIComponent(query)}&type=release&format=Vinyl&per_page=10`;
+export async function searchDiscogs(query: string, options?: DiscogsSearchOptions) {
+  const perPage = options?.perPage ?? 10;
+  const enrichMissingThumbs = options?.enrichMissingThumbs ?? true;
+  const url = `${BASE}/database/search?q=${encodeURIComponent(query)}&type=release&format=Vinyl&per_page=${perPage}`;
   const res = await fetch(url, { headers: headers(), next: { revalidate: 60 } });
   if (!res.ok) throw new Error(`Discogs search failed: ${res.status}`);
   const data = await res.json();
   const results = data.results as DiscogsSearchResult[];
+
+  if (!enrichMissingThumbs) return results;
 
   const missingThumbResults = results.filter((result) => !result.thumb);
   if (missingThumbResults.length === 0) return results;

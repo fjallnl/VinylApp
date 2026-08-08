@@ -69,7 +69,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchRateLimitedUntil, setSearchRateLimitedUntil] = useState<number | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const [genreTags, setGenreTags] = useState<string[]>(record?.genre ?? []);
   const [genreInput, setGenreInput] = useState("");
@@ -139,17 +143,100 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   }, [genreTags, setValue]);
 
   async function searchDiscogs(query: string) {
-    if (!query.trim()) return;
-    setSearching(true);
-    setSearchResults([]);
-    try {
-      const res = await fetch(`/api/discogs/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setSearchResults(data.results ?? []);
-    } finally {
+    const normalized = query.trim();
+    if (normalized.length < 3) {
+      setSearchResults([]);
       setSearching(false);
+      setSearchError(null);
+      setSearchRateLimitedUntil(null);
+      setHasSearched(false);
+      return;
+    }
+
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    setSearching(true);
+    setSearchError(null);
+    try {
+      const res = await fetch(`/api/discogs/search?q=${encodeURIComponent(normalized)}`, { signal: controller.signal });
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        const retryAfterSeconds = Number(data.retryAfterSeconds ?? 0);
+        if (retryAfterSeconds > 0) {
+          setSearchRateLimitedUntil(Date.now() + retryAfterSeconds * 1000);
+          setSearchError(`Search is temporarily rate-limited. Try again in ${retryAfterSeconds}s.`);
+        } else {
+          setSearchError("Search is temporarily rate-limited. Please try again soon.");
+        }
+        setSearchResults([]);
+        setHasSearched(true);
+        return;
+      }
+      if (!res.ok) throw new Error(`Discogs search failed (${res.status})`);
+      const data = await res.json();
+      setSearchRateLimitedUntil(null);
+      setSearchResults(data.results ?? []);
+      setHasSearched(true);
+    } catch {
+      if (controller.signal.aborted) return;
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        setSearchError("You are offline. Reconnect to search Discogs.");
+      } else {
+        setSearchError("Discogs search is currently unavailable.");
+      }
+      setSearchResults([]);
+      setHasSearched(true);
+    } finally {
+      if (!controller.signal.aborted) {
+        setSearching(false);
+      }
     }
   }
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 3) {
+      setSearchResults([]);
+      setSearching(false);
+      setSearchError(null);
+      setSearchRateLimitedUntil(null);
+      setHasSearched(false);
+      searchAbortRef.current?.abort();
+      return;
+    }
+
+    const rateLimitedRemainingMs = searchRateLimitedUntil ? searchRateLimitedUntil - Date.now() : 0;
+    if (rateLimitedRemainingMs > 0) return;
+
+    const timeout = setTimeout(() => {
+      void searchDiscogs(q);
+    }, 450);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery, searchRateLimitedUntil]);
+
+  useEffect(() => {
+    if (!searchRateLimitedUntil) return;
+    const remainingMs = searchRateLimitedUntil - Date.now();
+    if (remainingMs <= 0) {
+      setSearchRateLimitedUntil(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSearchRateLimitedUntil(null);
+    }, remainingMs);
+
+    return () => clearTimeout(timeout);
+  }, [searchRateLimitedUntil]);
+
+  useEffect(() => {
+    return () => {
+      searchAbortRef.current?.abort();
+    };
+  }, []);
 
   async function loadDiscogsRelease(id: number) {
     setSearching(true);
@@ -317,6 +404,16 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             <Barcode size={16} />
           </button>
         </div>
+        <p className="text-xs text-dim">Suggestions appear while typing (minimum 3 characters).</p>
+        {searching && <p className="text-xs text-muted">Searching Discogs…</p>}
+        {searchError && (
+          <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 text-sm text-rose-200">
+            <p>{searchError}</p>
+          </div>
+        )}
+        {!searching && !searchError && hasSearched && searchQuery.trim().length >= 3 && searchResults.length === 0 && (
+          <p className="text-sm text-muted">No Discogs matches found.</p>
+        )}
         {scannerError && (
           <div className="bg-rose-950 border border-rose-800 rounded-lg p-3 mt-3 text-sm text-rose-200">
             <p>{scannerError}</p>
