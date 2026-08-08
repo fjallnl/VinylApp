@@ -54,7 +54,7 @@ interface RecordData {
 export default function RecordForm({ record }: { record?: RecordData }) {
   const router = useRouter();
   const [searching, setSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; thumb: string; catalogNumber?: string | null }[]>([]);
+  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: string; country: string; label: string; thumb: string; catalogNumber?: string | null }[]>([]);
   const [tracks, setTracks] = useState<Track[]>(
     record?.tracks.map((t) => ({ position: t.position ?? "", title: t.title, duration: t.duration ?? "" })) ?? []
   );
@@ -446,7 +446,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                 key={r.id}
                 type="button"
                 onClick={() => loadDiscogsRelease(r.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-subtle transition-colors text-left"
+                className="flex items-start gap-3 w-full px-3 py-2.5 hover:bg-subtle transition-colors text-left"
               >
                 {r.thumb ? (
                   <Image src={`/api/proxy-image?url=${encodeURIComponent(r.thumb)}`} alt="" width={40} height={40} unoptimized className="rounded shrink-0" />
@@ -455,13 +455,14 @@ export default function RecordForm({ record }: { record?: RecordData }) {
                     <Disc3 size={16} className="text-dim" />
                   </div>
                 )}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{r.title}</p>
-                  {(r.year || r.catalogNumber) && (
-                    <p className="text-xs text-muted">
-                      {r.year && r.catalogNumber ? `${r.year} - cat. no. ${r.catalogNumber}` : r.year || `cat. no. ${r.catalogNumber}`}
-                    </p>
-                  )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-5 truncate">{r.title}</p>
+                  <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted leading-4">
+                    {r.country && <span className="truncate max-w-[7rem] sm:max-w-[10rem]">{r.country}</span>}
+                    {r.label && <span className="truncate max-w-[8rem] sm:max-w-[12rem]">{r.label}</span>}
+                    {r.year && <span>{r.year}</span>}
+                    {r.catalogNumber && <span className="whitespace-nowrap">cat. no. {r.catalogNumber}</span>}
+                  </div>
                 </div>
               </button>
             ))}

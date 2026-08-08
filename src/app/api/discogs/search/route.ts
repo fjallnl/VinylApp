@@ -8,6 +8,8 @@ type SearchPayload = {
     id: number;
     title: string;
     year: string;
+    country: string;
+    label: string;
     catalogNumber?: string | null;
     thumb: string;
   }>;
@@ -72,6 +74,8 @@ export async function GET(req: Request) {
         id: r.id,
         title: r.title,
         year: r.year,
+        country: r.country,
+        label: r.label?.[0] ?? "",
         catalogNumber: r.catno,
         thumb: r.thumb,
       })),
