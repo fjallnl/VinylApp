@@ -152,6 +152,38 @@ html[data-theme="light"] .hover\:bg-subtle:hover { background-color: #e2e8f0 !im
 .vinyl-spin {
   animation: vinyl-spin 6s linear infinite;
 }
+/* Landing page drift: three axes at unrelated speeds → slow, non-repeating float */
+.vinyl-drift-x { --drift-scale: 0.6; }
+@media (min-width: 48rem) {
+  .vinyl-drift-x { --drift-scale: 1; }
+}
+@keyframes vinyl-drift-x {
+  from { transform: translateX(calc(var(--drift-x) * var(--drift-scale) * -1)); }
+  to   { transform: translateX(calc(var(--drift-x) * var(--drift-scale))); }
+}
+@keyframes vinyl-drift-y {
+  from { transform: translateY(calc(var(--drift-y) * var(--drift-scale) * -1)); }
+  to   { transform: translateY(calc(var(--drift-y) * var(--drift-scale))); }
+}
+@keyframes vinyl-drift-r {
+  from { transform: rotate(calc(var(--float-rotate) - var(--drift-r))); }
+  to   { transform: rotate(calc(var(--float-rotate) + var(--drift-r))); }
+}
+.vinyl-drift-x { animation: vinyl-drift-x var(--dur-x) ease-in-out var(--delay-x) infinite alternate; }
+.vinyl-drift-y { animation: vinyl-drift-y var(--dur-y) ease-in-out var(--delay-y) infinite alternate; }
+.vinyl-drift-r {
+  transform: rotate(var(--float-rotate));
+  animation: vinyl-drift-r var(--dur-r) ease-in-out var(--delay-r) infinite alternate;
+}
+@keyframes landing-fade {
+  from { opacity: 0; transform: translateY(8px); }
+}
+.landing-fade {
+  animation: landing-fade 1.2s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vinyl-drift-x, .vinyl-drift-y, .vinyl-drift-r, .vinyl-spin, .landing-fade { animation: none; }
+}
 .strip-scroll::-webkit-scrollbar {
   display: none;
 }
