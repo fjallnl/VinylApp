@@ -181,6 +181,12 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      <footer className="relative z-10 p-4 text-center text-xs text-dim">
+        <Link href="/privacy" className="hover:text-accent transition-colors">
+          Privacy &amp; Cookies
+        </Link>
+      </footer>
     </div>
   );
 }
