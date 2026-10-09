@@ -1,6 +1,6 @@
 # VinylApp
 
-VinylApp is een self-hosted webapp om je vinylcollectie te beheren.
+VinylApp is een webapp om je vinylcollectie te beheren, die je zelf kunt hosten.
 
 ## Wat doet deze applicatie?
 
@@ -8,29 +8,30 @@ VinylApp is een self-hosted webapp om je vinylcollectie te beheren.
 - Ondersteunt **meerdere gebruikers** (iedereen ziet alleen zijn/haar eigen data)
 - **Admin-paneel** voor gebruikersbeheer (`/admin`)
 - **Discogs-integratie** voor zoeken en release-data
-- **Cover-opslag** in MinIO (S3-compatible)
+- **Cover-opslag** in S3-compatible storage (bijv. MinIO lokaal, of AWS S3 / Cloudflare R2)
+- **Registratie met e-mailverificatie** via SMTP2GO
 - In te stellen als **PWA** op mobiel
 
-Stack: Next.js 16, TypeScript, Prisma 7, NextAuth v5, PostgreSQL, MinIO.
+Stack: Next.js 16, TypeScript, Prisma 7, NextAuth v5, PostgreSQL, S3-compatible storage.
 
 ## Architectuur (Mermaid)
 
 ```mermaid
 flowchart LR
-  U[Gebruiker - Browser of PWA] -->|HTTPS| NGINX[nginx reverse proxy - self hosted productie]
-  NGINX --> APP[VinylApp - Next.js 16 App Router]
+  U[Gebruiker - Browser of PWA] -->|HTTP/HTTPS| APP[VinylApp - Next.js 16 App Router]
 
   APP -->|Auth sessies en JWT| AUTH[NextAuth v5]
-  AUTH -->|User/role lookup| DB[(PostgreSQL 16)]
+  AUTH -->|User/role lookup| DB[(PostgreSQL)]
 
   APP -->|ORM queries| PRISMA[Prisma 7]
   PRISMA --> DB
 
-  APP -->|S3 API upload download delete| MINIO[(MinIO S3 compatible storage)]
-  U -->|Publieke cover URL| MINIO
+  APP -->|S3 API upload download delete| S3[(S3 compatible storage)]
+  U -->|Publieke cover URL| S3
 
   APP -->|Zoeken release-data| DISCOGS[Discogs API]
   APP -->|Server-side cover download| DISCOGS
+  APP -->|Verificatiemail| SMTP[SMTP2GO]
 ```
 
 ---
@@ -62,6 +63,8 @@ Voor PowerShell op Windows kan ook:
 Copy-Item .env.example .env
 ```
 
+Zet in `.env` in ieder geval `NEXTAUTH_SECRET` (genereer met `openssl rand -base64 32`). Voor registratie met e-mailverificatie zijn ook `SMTP2GO_*` en `SMTP_FROM` nodig; zonder die waarden geeft `/register` HTTP 503. Gebruikers die je met `create-user` of via `/admin` aanmaakt zijn direct geverifieerd. Rate limiting voor registratie kun je lokaal uitzetten met `EMAIL_VERIFICATION_RATE_LIMIT_DISABLED=true`.
+
 3. PostgreSQL en MinIO starten:
 
 ```bash
@@ -71,6 +74,8 @@ docker exec -it vinyl-minio mc alias set local http://localhost:9000 minioadmin 
 docker exec -it vinyl-minio mc mb --ignore-existing local/vinyl-covers
 docker exec -it vinyl-minio mc anonymous set public local/vinyl-covers
 ```
+
+Pas `DATABASE_URL` in `.env` aan naar deze container: `postgresql://vinyluser:vinylpass@localhost:5432/vinyldb`.
 
 4. Database schema pushen:
 
@@ -101,7 +106,7 @@ De repository bevat een `docker-compose.yml` met:
 - `postgres`
 - `minio`
 - `minio-init` (maakt bucket `vinyl-covers` + public access)
-- `app` (bouwt en start VinylApp)
+- `app` (bouwt en start VinylApp; draait bij het opstarten `prisma db push`)
 
 ### Stappen
 
@@ -110,6 +115,8 @@ De repository bevat een `docker-compose.yml` met:
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
 - `NEXT_PUBLIC_S3_PUBLIC_URL`
+
+> De `app`-service krijgt alleen de variabelen uit zijn `environment:`-blok. `SMTP2GO_*`, `SMTP_FROM`, `APP_BASE_URL` en `EMAIL_VERIFICATION_*` staan daar nog niet in. Voeg ze toe (bijv. `SMTP2GO_HOST: ${SMTP2GO_HOST}`) als je registratie in de container wilt gebruiken.
 
 2. Start alles:
 
@@ -120,10 +127,12 @@ docker compose up -d --build
 3. (Optioneel) admin gebruiker maken:
 
 ```bash
-docker exec -it vinyl-app node_modules/.bin/tsx scripts/create-user.ts admin@example.com sterk-wachtwoord
+docker compose exec app npx tsx scripts/create-user.ts admin@example.com sterk-wachtwoord
 ```
 
 App draait dan op: http://localhost:3000
+
+Wil je de stack achter een reverse proxy draaien, dan staat in `nginx/vinyl-app.conf` een voorbeeldconfig (app op `/`, MinIO-covers op `/covers/`).
 
 ---
 
@@ -131,31 +140,35 @@ App draait dan op: http://localhost:3000
 
 > Let op: Vercel host alleen de Next.js app. Je hebt extern nodig:
 >
-> - PostgreSQL (bijv. Neon, Supabase, Azure Database for PostgreSQL, Vercel Postgres)
-> - S3-compatible object storage (bijv. AWS S3, Cloudflare R2, MinIO buiten Vercel)
+> - PostgreSQL (bijv. Neon, Supabase, Azure Database for PostgreSQL)
+> - S3-compatible object storage (bijv. AWS S3, Cloudflare R2)
+> - SMTP (SMTP2GO) voor verificatiemails
 
 ### Stappen
 
 1. Push je repo naar GitHub en importeer het project in Vercel.
 
-2. Stel in Vercel Environment Variables in (Production/Preview naar wens):
+2. Stel in Vercel Environment Variables in:
 
 - `DATABASE_URL`
-- `NEXTAUTH_URL` (je Vercel domein, bijv. `https://jouw-app.vercel.app`)
+- `NEXTAUTH_URL` (je app-domein, bijv. `https://jouw-app.vercel.app`)
 - `NEXTAUTH_SECRET`
-- `APP_BASE_URL`
-- `S3_ENDPOINT`
+- `APP_BASE_URL` (basis voor verificatielinks, moet `https` zijn)
+- `S3_ENDPOINT` (voor Cloudflare R2: `https://<account-id>.r2.cloudflarestorage.com`)
 - `S3_ACCESS_KEY`
 - `S3_SECRET_KEY`
 - `S3_BUCKET`
-- `S3_REGION`
-- `S3_FORCE_PATH_STYLE` (optioneel; zet op `false` voor Cloudflare R2, `true` voor MinIO)
-- `NEXT_PUBLIC_S3_PUBLIC_URL`
-- optioneel: `DISCOGS_USER_AGENT`, `DISCOGS_TOKEN`
+- `S3_REGION` (voor R2: `auto`)
+- `S3_FORCE_PATH_STYLE` (optioneel; `false` voor Cloudflare R2 — wordt automatisch gedetecteerd — en `true` voor MinIO)
+- `NEXT_PUBLIC_S3_PUBLIC_URL` (publieke basis-URL van de bucket)
+- `SMTP2GO_HOST`, `SMTP2GO_PORT`, `SMTP2GO_USER`, `SMTP2GO_PASS`, `SMTP_FROM`
+- optioneel: `EMAIL_VERIFICATION_*` (zie `.env.example`), `PRIVACY_CONTROLLER_NAME`, `PRIVACY_CONTACT_EMAIL`, `DISCOGS_USER_AGENT`, `DISCOGS_TOKEN`
+
+Vercel kent aparte omgevingen voor **Production** en **Preview**. Geef Preview bij voorkeur een eigen database, eigen bucket (met eigen keys) en een eigen `NEXTAUTH_SECRET`, zodat preview-deployments nooit productiedata raken.
 
 3. Deploy de app op Vercel.
 
-4. Push daarna eenmalig je Prisma schema naar je productie-database:
+4. Push het Prisma schema naar de database (eenmalig en na elke schemawijziging; Vercel doet dit niet tijdens de build):
 
 ```bash
 npm run db:push
@@ -169,7 +182,9 @@ Gebruik hiervoor dezelfde `DATABASE_URL` als in Vercel (bijv. lokaal tijdelijk g
 npm run create-user -- admin@example.com sterk-wachtwoord
 ```
 
-Ook hier met productie `DATABASE_URL`.
+Ook hier met dezelfde `DATABASE_URL`.
+
+> De rate limiter voor registratie is in-memory per proces. Op een serverless platform geldt de limiet dus per instance en wordt die bij een cold start gereset.
 
 ---
 
