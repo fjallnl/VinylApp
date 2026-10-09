@@ -1,9 +1,10 @@
 # Vinyl App Setup Guide
 
-This guide describes two workflows:
+This guide describes three workflows:
 
-- Development environment
-- Production deployment on Proxmox LXC
+- Development environment (your own machine)
+- Running the full stack with Docker Compose
+- Deploying to a hosted platform (e.g. Vercel)
 
 ---
 
@@ -24,6 +25,7 @@ npm install
 ```bash
 cp .env.example .env
 # Edit .env to set:
+# DATABASE_URL=postgresql://vinyluser:vinylpass@localhost:5432/vinyldb
 # NEXTAUTH_URL=http://localhost:3000
 # NEXTAUTH_SECRET=<secure-random-value>
 # NEXT_PUBLIC_S3_PUBLIC_URL=http://localhost:9000/vinyl-covers
@@ -41,13 +43,13 @@ openssl rand -base64 32
 
 ### 3. Start development services
 
-This project uses PostgreSQL and MinIO in Docker.
+This project uses PostgreSQL and MinIO in Docker. Start only those services from `docker-compose.yml` (the `app` service is for running the full stack, see below):
 
 ```bash
-docker compose up -d
+docker compose up -d postgres minio minio-init
 ```
 
-Wait until the containers are ready.
+Wait until the containers are ready. `minio-init` creates the `vinyl-covers` bucket and makes it publicly readable.
 
 ### 4. Create the database and run locally
 
@@ -75,94 +77,62 @@ This creates (or promotes) an `ADMIN` user that is already email-verified.
 
 ---
 
-## Production deployment
+## Full stack with Docker Compose
 
-Use this section to deploy the app into a Proxmox Debian LXC and expose it via Nginx.
+Use this section to run the app itself in a container next to PostgreSQL and MinIO, for example to test a production build locally or to self-host on any machine with Docker.
 
-### 1. Create Debian LXC in Proxmox
-
-- Template: Debian 12 (Bookworm)
-- RAM: 2048 MB (4096 recommended)
-- Disk: 30 GB
-- Features: `keyctl=1,nesting=1` (required for Docker)
-
-### 2. Install Docker in the LXC
+### 1. Prepare `.env`
 
 ```bash
-apt update && apt install -y curl
-curl -fsSL https://get.docker.com | sh
-systemctl enable docker
-```
-
-### 3. Copy project files to the LXC
-
-From your workstation:
-
-```bash
-scp -r . root@<lxc-ip>:/opt/vinyl-app
-```
-
-On the LXC:
-
-```bash
-cd /opt/vinyl-app
 cp .env.example .env
-nano .env
 ```
 
-Fill in production values for:
+Set at least:
 
-- `NEXTAUTH_URL` (your app URL)
+- `NEXTAUTH_URL` (the URL the app is reached on, e.g. `http://localhost:3000`)
 - `NEXTAUTH_SECRET` (secure random secret)
-- `NEXT_PUBLIC_S3_PUBLIC_URL` (public MinIO cover URL)
-- `APP_BASE_URL` (public `https://` URL used in verification links; falls back to `NEXTAUTH_URL`)
-- `SMTP2GO_HOST`, `SMTP2GO_PORT`, `SMTP2GO_USER`, `SMTP2GO_PASS`, `SMTP_FROM` (needed for self-registration)
+- `NEXT_PUBLIC_S3_PUBLIC_URL` (public cover URL, e.g. `http://localhost:9000/vinyl-covers`)
+
+Inside Compose, `DATABASE_URL` and `S3_ENDPOINT` point to the service names (`postgres`, `http://minio:9000`) and are set in `docker-compose.yml`.
 
 > **Note:** the `app` service in `docker-compose.yml` only receives the variables listed in its `environment:` block. The SMTP, `APP_BASE_URL` and `EMAIL_VERIFICATION_*` variables are not listed there yet. Add them (for example `SMTP2GO_HOST: ${SMTP2GO_HOST}`), or registration will return HTTP 503.
 
-### 4. Start production services
+### 2. Start the stack
 
 ```bash
 docker compose up -d --build
 ```
 
-The app container runs `prisma db push` on every start, so the database schema is created and updated automatically. You don't need to run a separate migration step.
+The app container runs `prisma db push` on every start, so the database schema is created and updated automatically.
 
-### 5. Create an admin user
+### 3. Create an admin user
 
 ```bash
 docker compose exec app npx tsx scripts/create-user.ts you@example.com yourpassword
 ```
 
-### 6. Set up Nginx reverse proxy
+### 4. Updating
 
 ```bash
-apt install -y nginx certbot python3-certbot-nginx
-cp nginx/vinyl-app.conf /etc/nginx/sites-available/vinyl-app
-ln -s /etc/nginx/sites-available/vinyl-app /etc/nginx/sites-enabled/
-# Edit the config and replace your-domain.com with your real domain
-nano /etc/nginx/sites-available/vinyl-app
-nginx -t && systemctl reload nginx
-certbot --nginx -d your-domain.com
-```
-
-### 7. Configure MinIO
-
-- Admin console: `http://<lxc-ip>:9001`
-- Default credentials: `minioadmin / minioadmin`
-
-> Change the default MinIO credentials in production.
-
-Create bucket `vinyl-covers` and configure it for public read access if you want cover images to be directly accessible.
-
----
-
-## Updating production
-
-```bash
-cd /opt/vinyl-app
 git pull
 docker compose up -d --build
 ```
 
-Schema changes are applied automatically when the app container starts (`prisma db push`).
+### Optional: reverse proxy
+
+`nginx/vinyl-app.conf` is an example nginx config that proxies `/` to the app (`:3000`) and `/covers/` to MinIO (`:9000/vinyl-covers/`). Replace `your-domain.com`, add TLS (e.g. certbot) and set `NEXT_PUBLIC_S3_PUBLIC_URL` to `https://your-domain.com/covers`.
+
+> The MinIO and Postgres credentials in `docker-compose.yml` are development defaults (`minioadmin` / `vinylpass`). Change them before exposing the stack to a network.
+
+---
+
+## Hosted deployment (e.g. Vercel)
+
+The app also runs on a serverless platform such as Vercel, with a managed PostgreSQL database (e.g. Neon) and S3-compatible object storage (e.g. Cloudflare R2). See the "Deploy op Vercel" section in `README.md` for the full list of environment variables. Points to keep in mind:
+
+- The build (`npm run build`) does not touch the database. Run `npm run db:push` yourself with the platform's `DATABASE_URL`, once and after every schema change.
+- Create the first admin the same way: `npm run create-user -- you@example.com yourpassword` with that `DATABASE_URL`.
+- For Cloudflare R2, use `S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com` and `S3_REGION=auto`; path-style is switched off automatically.
+- `APP_BASE_URL` (or `NEXTAUTH_URL`) must be `https` in production, otherwise verification emails are not sent.
+- Keep preview deployments separate from production: their own database, bucket, keys and `NEXTAUTH_SECRET`.
+- The registration rate limiter is in-memory per process, so on serverless it applies per instance.

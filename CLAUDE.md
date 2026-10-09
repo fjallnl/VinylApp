@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-VinylApp is a personal vinyl record collection manager built for self-hosting on a Proxmox LXC. It is a multi-user app — each user has their own records and wantlist, and admins manage accounts at `/admin`. It has Discogs integration, MinIO cover image storage, a wantlist, star ratings, and condition grading. It is designed to be installable as a PWA on mobile.
+VinylApp is a personal vinyl record collection manager. It runs locally (Docker for Postgres + MinIO), as a full Docker Compose stack, or on a serverless host such as Vercel with managed Postgres and S3-compatible storage. It is a multi-user app — each user has their own records and wantlist, and admins manage accounts at `/admin`. It has Discogs integration, MinIO cover image storage, a wantlist, star ratings, and condition grading. It is designed to be installable as a PWA on mobile.
 
 ## Commands
 
@@ -27,9 +27,9 @@ docker exec -it vinyl-minio mc alias set local http://localhost:9000 minioadmin 
 docker exec -it vinyl-minio mc anonymous set public local/vinyl-covers
 ```
 
-Deploy to production VM:
+Full stack in Docker (app + Postgres + MinIO):
 ```bash
-git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker compose up --build -d
+docker compose up -d --build   # app container runs prisma db push on start
 ```
 
 ## Architecture
@@ -69,10 +69,10 @@ git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker co
 - Discogs thumbnails in search results are proxied through `/api/proxy-image?url=` to avoid browser-level hotlink blocking.
 - When a record is saved with a Discogs cover URL (`discogsCoverUrl` in the payload), the API route downloads it to MinIO server-side via `src/lib/cover.ts`.
 
-**Production deployment:**
-- nginx sits in front on port 80. `/covers/` proxies to MinIO (`http://localhost:9000/vinyl-covers/`).
-- Docker Compose runs postgres, minio, minio-init, and app containers. The app container runs `prisma db push` then `node server.js` on startup.
-- `S3_ENDPOINT` inside Docker uses the internal service name (`http://minio:9000`); `NEXT_PUBLIC_S3_PUBLIC_URL` uses the public domain.
+**Deployment:**
+- Serverless (e.g. Vercel): no in-memory state survives across requests/instances (the rate limiter is per instance), the build does not run `prisma db push` (run it manually against the target `DATABASE_URL`), and Production and Preview use separate env vars, database and bucket. For Cloudflare R2, `S3_FORCE_PATH_STYLE` auto-switches to `false` based on the `.r2.cloudflarestorage.com` endpoint.
+- Docker Compose runs postgres, minio, minio-init, and app containers. The app container runs `prisma db push` then `node server.js` on startup. `nginx/vinyl-app.conf` is an optional reverse-proxy example (`/covers/` → `http://localhost:9000/vinyl-covers/`).
+- `S3_ENDPOINT` inside Docker uses the internal service name (`http://minio:9000`); `NEXT_PUBLIC_S3_PUBLIC_URL` uses the public URL.
 - The `app` service in `docker-compose.yml` uses an explicit `environment:` list (no `env_file`). It currently doesn't forward `SMTP2GO_*`, `SMTP_FROM`, `APP_BASE_URL` or `EMAIL_VERIFICATION_*`, so they must be added there for verification emails to work in Docker.
 
 ### File layout

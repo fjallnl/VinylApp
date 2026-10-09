@@ -104,16 +104,20 @@ npm install
 # Run dev server
 npm run dev
 
-# Run test suite
-npm test
-
-# Run linter and formatter
+# Run linter
 npm run lint
-npm run format
 
-# Run database migrations
-npm run db:migrate
+# Production build (prisma generate + next build)
+npm run build
+
+# Push schema changes to the database (no migrations folder; don't use db:migrate)
+npm run db:push
+
+# Create or promote an ADMIN user
+npm run create-user -- <email> <password>
 ```
+
+There is no test runner or formatter script yet.
 
 ---
 
