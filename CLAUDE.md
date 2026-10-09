@@ -53,7 +53,14 @@ git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker co
 - `User.role` is a Prisma enum (`ADMIN` | `USER`, default `USER`). Session types are augmented in `src/types/next-auth.d.ts`; the JWT type augmentation does not work in this next-auth beta, so `token.role`/`token.id` are cast where read.
 - The `jwt` callback re-reads the user from the DB on every session read: role changes apply immediately and deleted users are signed out (returns `null` to invalidate the JWT).
 - All record/wantlist queries must filter by `session.user.id`. Admin-only surfaces: `/admin` page (redirects non-admins) and `/api/admin/users*` routes (check `session.user.role !== "ADMIN"` → 403). Guards prevent self-deletion and demoting/deleting the last admin.
-- Self-registration is open (no invite code, no email verification yet) at `/register` + `POST /api/register`, creating `USER`-role accounts. Both are carved out as public routes in `auth.config.ts`'s `authorized` callback (`isRegisterPage`, `isApiRegister`) alongside `/login` and `/api/auth`. Email verification is a known gap — no SMTP/email-sending is configured in this repo.
+- Self-registration is open (no invite code) at `/register` + `POST /api/register`, creating `USER`-role accounts with `emailVerified: null`. All `/register*` and `/api/register*` paths are carved out as public routes in `auth.config.ts`'s `authorized` callback (`isRegisterPage`, `isApiRegister`) alongside `/login` and `/api/auth`.
+
+**Email verification:**
+- Registration sends a verification link (`/register/verify?token=…`) via SMTP2GO using nodemailer (`src/lib/mailer.ts`). Required env: `SMTP2GO_HOST`, `SMTP2GO_PORT` (default 587; 465 → TLS), `SMTP2GO_USER`, `SMTP2GO_PASS`, `SMTP_FROM`. The link base is `APP_BASE_URL` (falls back to `NEXTAUTH_URL`) and must be `https` in production. Missing config → `MailerConfigurationError` → register/resend return 503.
+- Tokens (`src/lib/email-verification.ts`) are 32 random bytes, stored only as a SHA-256 hash in `EmailVerificationToken`, single-use, TTL `EMAIL_VERIFICATION_TTL_MINUTES` (default 60). Issuing a new token consumes older ones; resends are throttled by `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` (default 60).
+- `POST /api/register/verify` consumes the token and sets `User.emailVerified`. `POST /api/register/resend` re-sends for unverified users (the login page offers this). Register/resend return a generic message so they don't reveal whether an email exists.
+- Non-admin users without `emailVerified` cannot sign in (`authorize` in `auth.ts`), and the `jwt` callback invalidates their session. Users created by admins (`/api/admin/users`) or `scripts/create-user.ts` are marked verified immediately.
+- Register/resend/verify are rate-limited per IP and per email by `src/lib/rate-limit.ts` — an in-memory, per-process store (resets on restart). Limits come from the `EMAIL_VERIFICATION_*_LIMIT` / `*_WINDOW_SECONDS` env vars (see `.env.example`); `EMAIL_VERIFICATION_RATE_LIMIT_DISABLED=true` turns it off.
 
 **Image handling:**
 - Cover images are stored in MinIO under keys like `1712345678901.jpg` (timestamp + ext, no path prefix).
@@ -66,6 +73,7 @@ git push && ssh root@<vm-ip> "/opt/vinyl-app/deploy.sh"   # git pull + docker co
 - nginx sits in front on port 80. `/covers/` proxies to MinIO (`http://localhost:9000/vinyl-covers/`).
 - Docker Compose runs postgres, minio, minio-init, and app containers. The app container runs `prisma db push` then `node server.js` on startup.
 - `S3_ENDPOINT` inside Docker uses the internal service name (`http://minio:9000`); `NEXT_PUBLIC_S3_PUBLIC_URL` uses the public domain.
+- The `app` service in `docker-compose.yml` uses an explicit `environment:` list (no `env_file`). It currently doesn't forward `SMTP2GO_*`, `SMTP_FROM`, `APP_BASE_URL` or `EMAIL_VERIFICATION_*`, so they must be added there for verification emails to work in Docker.
 
 ### File layout
 
@@ -81,14 +89,14 @@ src/
     api/
       auth/         # NextAuth handler
       admin/users/  # Admin-only user CRUD (list/create, role/password/delete)
-      register/     # Public self-registration endpoint (no email verification yet)
+      register/     # Public self-registration endpoint + verify/ and resend/ email verification
       records/      # CRUD + bulk-delete
       wantlist/     # CRUD
       discogs/      # search, release/[id], barcode — proxies Discogs REST API
       upload-url/   # Returns S3 presigned PUT URL for direct client upload
       proxy-image/  # Server-side proxy for Discogs images (avoids hotlink block)
     login/
-    register/       # Public self-registration page
+    register/       # Public self-registration page; verify/ handles the email link
   lib/
     auth.config.ts  # Edge-safe NextAuth config
     auth.ts         # Full NextAuth config
@@ -96,6 +104,9 @@ src/
     s3.ts           # S3Client, coverUrl(), getUploadUrl(), deleteObject()
     cover.ts        # downloadCoverToMinio() — fetches Discogs URL and uploads to MinIO
     discogs.ts      # Discogs API helpers
+    mailer.ts       # nodemailer/SMTP2GO transport, verification email, getAppBaseUrl()
+    email-verification.ts  # Token issue/verify (hashed, single-use, TTL + resend cooldown)
+    rate-limit.ts   # In-memory per-process rate limiter for register/resend/verify
     utils.ts        # cn(), CONDITIONS array
   components/
     RecordForm.tsx      # Add/edit form — Discogs search, barcode scan, cover upload

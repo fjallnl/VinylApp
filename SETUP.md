@@ -27,7 +27,11 @@ cp .env.example .env
 # NEXTAUTH_URL=http://localhost:3000
 # NEXTAUTH_SECRET=<secure-random-value>
 # NEXT_PUBLIC_S3_PUBLIC_URL=http://localhost:9000/vinyl-covers
+# APP_BASE_URL=http://localhost:3000
+# SMTP2GO_HOST / SMTP2GO_PORT / SMTP2GO_USER / SMTP2GO_PASS / SMTP_FROM
 ```
+
+Self-registration sends a verification email via SMTP2GO. Without the `SMTP2GO_*` and `SMTP_FROM` values, `/register` returns "Registration is temporarily unavailable" (HTTP 503). Users created with `create-user` or from the admin page are marked verified, so they don't need email. The `EMAIL_VERIFICATION_*` variables (token TTL, resend cooldown, rate limits) are optional; see `.env.example` for the defaults.
 
 Generate a secure secret:
 
@@ -47,16 +51,20 @@ Wait until the containers are ready.
 
 ### 4. Create the database and run locally
 
+The project uses `prisma db push` (there is no migrations folder):
+
 ```bash
-docker compose exec app npx prisma db push
+npm run db:push
 npm run dev
 ```
 
 ### 5. Create an initial user
 
 ```bash
-docker compose exec app npx tsx scripts/create-user.ts you@example.com yourpassword
+npm run create-user -- you@example.com yourpassword
 ```
+
+This creates (or promotes) an `ADMIN` user that is already email-verified.
 
 ### 6. Useful commands
 
@@ -107,6 +115,10 @@ Fill in production values for:
 - `NEXTAUTH_URL` (your app URL)
 - `NEXTAUTH_SECRET` (secure random secret)
 - `NEXT_PUBLIC_S3_PUBLIC_URL` (public MinIO cover URL)
+- `APP_BASE_URL` (public `https://` URL used in verification links; falls back to `NEXTAUTH_URL`)
+- `SMTP2GO_HOST`, `SMTP2GO_PORT`, `SMTP2GO_USER`, `SMTP2GO_PASS`, `SMTP_FROM` (needed for self-registration)
+
+> **Note:** the `app` service in `docker-compose.yml` only receives the variables listed in its `environment:` block. The SMTP, `APP_BASE_URL` and `EMAIL_VERIFICATION_*` variables are not listed there yet. Add them (for example `SMTP2GO_HOST: ${SMTP2GO_HOST}`), or registration will return HTTP 503.
 
 ### 4. Start production services
 
@@ -114,19 +126,15 @@ Fill in production values for:
 docker compose up -d --build
 ```
 
-### 5. Run Prisma migrations
+The app container runs `prisma db push` on every start, so the database schema is created and updated automatically. You don't need to run a separate migration step.
 
-```bash
-docker compose exec app npx prisma migrate deploy
-```
-
-### 6. Create an admin user
+### 5. Create an admin user
 
 ```bash
 docker compose exec app npx tsx scripts/create-user.ts you@example.com yourpassword
 ```
 
-### 7. Set up Nginx reverse proxy
+### 6. Set up Nginx reverse proxy
 
 ```bash
 apt install -y nginx certbot python3-certbot-nginx
@@ -138,7 +146,7 @@ nginx -t && systemctl reload nginx
 certbot --nginx -d your-domain.com
 ```
 
-### 8. Configure MinIO
+### 7. Configure MinIO
 
 - Admin console: `http://<lxc-ip>:9001`
 - Default credentials: `minioadmin / minioadmin`
@@ -155,5 +163,6 @@ Create bucket `vinyl-covers` and configure it for public read access if you want
 cd /opt/vinyl-app
 git pull
 docker compose up -d --build
-docker compose exec app npx prisma migrate deploy
 ```
+
+Schema changes are applied automatically when the app container starts (`prisma db push`).
