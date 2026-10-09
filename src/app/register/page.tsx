@@ -135,6 +135,14 @@ export default function RegisterPage() {
             {errors.confirmPassword && <p className="text-red-400 text-xs mt-1.5">{errors.confirmPassword.message}</p>}
           </div>
 
+          <p className="text-xs text-dim">
+            By creating an account you acknowledge our{" "}
+            <Link href="/privacy" className="text-accent hover:underline">
+              privacy &amp; cookie statement
+            </Link>
+            .
+          </p>
+
           {serverError && <p className="text-red-400 text-xs uppercase tracking-wide font-semibold">{serverError}</p>}
           {serverMessage && <p className="text-emerald-400 text-xs uppercase tracking-wide font-semibold">{serverMessage}</p>}
 

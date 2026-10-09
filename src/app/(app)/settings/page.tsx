@@ -3,6 +3,7 @@
 import type { ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import Link from "next/link";
 import DesktopUserMenu from "@/components/DesktopUserMenu";
 
 const options = [
@@ -72,6 +73,12 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <p className="text-xs text-dim mt-6">
+        <Link href="/privacy" className="hover:text-accent transition-colors">
+          Privacy &amp; Cookies
+        </Link>
+      </p>
     </div>
   );
 }

@@ -124,6 +124,11 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
+        <p className="text-center text-xs text-dim mt-2">
+          <Link href="/privacy" className="hover:text-accent transition-colors">
+            Privacy &amp; Cookies
+          </Link>
+        </p>
       </div>
     </div>
   );
