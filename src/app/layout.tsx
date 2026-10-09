@@ -3,6 +3,7 @@ import { Josefin_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
+import { Analytics } from "@vercel/analytics/next";
 
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" data-theme={themePreference} className={`${josefinSans.variable} h-full`}>
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] antialiased">
         <SessionProvider>{children}</SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
