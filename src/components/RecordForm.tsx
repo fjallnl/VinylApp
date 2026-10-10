@@ -10,6 +10,7 @@ import { cn, CONDITIONS } from "@/lib/utils";
 import BarcodeScanner from "./BarcodeScanner";
 import Image from "next/image";
 import { coverUrl } from "@/lib/s3";
+import { COVER_CONTENT_TYPES, MAX_COVER_BYTES, isCoverContentType } from "@/lib/cover-key";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -281,6 +282,15 @@ export default function RecordForm({ record }: { record?: RecordData }) {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!isCoverContentType(file.type)) {
+      setSaveError("Only JPEG, PNG or WebP images are allowed");
+      return;
+    }
+    if (file.size > MAX_COVER_BYTES) {
+      setSaveError("Image is too large (max 10 MB)");
+      return;
+    }
+    setSaveError(null);
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
     setDiscogsCoverUrl(null);
@@ -307,18 +317,14 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       let coverKey: string | undefined;
 
       if (coverFile) {
-        const extFromName = coverFile.name.split(".").pop()?.toLowerCase();
-        const extFromType = coverFile.type.split("/")[1]?.toLowerCase();
-        const ext = extFromName || extFromType || "jpg";
-        const key = `${Date.now()}.${ext}`;
-        const urlRes = await fetch(`/api/upload-url?key=${encodeURIComponent(key)}&type=${encodeURIComponent(coverFile.type)}`);
+        const urlRes = await fetch(`/api/upload-url?type=${encodeURIComponent(coverFile.type)}&size=${coverFile.size}`);
         if (!urlRes.ok) {
           const errorData = await urlRes.json().catch(() => ({}));
           const errorMsg = errorData.error ? String(errorData.error) : `Failed to get upload URL (HTTP ${urlRes.status})`;
           setSaveError(errorMsg);
           throw new Error(errorMsg);
         }
-        const { url } = await urlRes.json();
+        const { url, key } = (await urlRes.json()) as { url: string; key: string };
         const uploadRes = await fetch(url, { method: "PUT", body: coverFile, headers: { "Content-Type": coverFile.type } });
         if (!uploadRes.ok) {
           const errorText = await uploadRes.text().catch(() => "");
@@ -519,7 +525,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
+              accept={Object.keys(COVER_CONTENT_TYPES).join(",")}
               capture="environment"
               onChange={handleFileChange}
               className="hidden"
