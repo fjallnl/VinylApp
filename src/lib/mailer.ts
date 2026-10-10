@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 
 type VerificationEmailParams = {
   to: string;
@@ -8,7 +8,7 @@ type VerificationEmailParams = {
 
 export class MailerConfigurationError extends Error {}
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: Transporter | null = null;
 
 function getRequiredEnv(name: string) {
   const value = process.env[name];

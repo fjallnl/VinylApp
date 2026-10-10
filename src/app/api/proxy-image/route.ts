@@ -5,7 +5,7 @@ const ALLOWED_HOSTS = ["i.discogs.com", "img.discogs.com"];
 
 export async function GET(req: Request) {
   const session = await auth();
-  if (!session) return new NextResponse(null, { status: 401 });
+  if (!session?.user?.id) return new NextResponse(null, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
