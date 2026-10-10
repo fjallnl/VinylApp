@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
+import { isDiscogsImageUrl } from "@/lib/discogs";
 import { NextResponse } from "next/server";
-
-const ALLOWED_HOSTS = ["i.discogs.com", "img.discogs.com"];
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -11,20 +10,19 @@ export async function GET(req: Request) {
   const url = searchParams.get("url");
   if (!url) return new NextResponse(null, { status: 400 });
 
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return new NextResponse(null, { status: 400 });
-  }
-
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+  if (!isDiscogsImageUrl(url)) {
     return new NextResponse(null, { status: 403 });
   }
 
-  const res = await fetch(url, {
-    headers: { "User-Agent": "VinylApp/1.0 +https://github.com/bergsj/VinylApp" },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      redirect: "error",
+      headers: { "User-Agent": "VinylApp/1.0 +https://github.com/bergsj/VinylApp" },
+    });
+  } catch {
+    return new NextResponse(null, { status: 502 });
+  }
 
   if (!res.ok) return new NextResponse(null, { status: res.status });
 

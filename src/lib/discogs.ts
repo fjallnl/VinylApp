@@ -1,5 +1,24 @@
 const BASE = "https://api.discogs.com";
 
+/** Hosts Discogs serves release images from; shared by the image proxy and the cover import. */
+export const DISCOGS_IMAGE_HOSTS = ["i.discogs.com", "img.discogs.com"];
+
+export function isDiscogsImageUrl(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  return (
+    url.protocol === "https:" &&
+    url.port === "" &&
+    url.username === "" &&
+    url.password === "" &&
+    DISCOGS_IMAGE_HOSTS.includes(url.hostname)
+  );
+}
+
 function headers() {
   const h: Record<string, string> = {
     "User-Agent": process.env.DISCOGS_USER_AGENT ?? "VinylApp/1.0",
