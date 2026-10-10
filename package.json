@@ -12,14 +12,14 @@
     "create-user": "tsx scripts/create-user.ts"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.2",
+    "@auth/prisma-adapter": "^2.11.3",
     "@aws-sdk/client-s3": "^3.1068.0",
     "@aws-sdk/s3-request-presigner": "^3.1068.0",
     "@hookform/resolvers": "^5.4.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/nodemailer": "^8.0.1",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.20.0",
     "@vercel/analytics": "^2.0.1",
     "@zxing/library": "^0.23.0",
@@ -27,10 +27,9 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.18.0",
-    "minio": "^8.0.7",
-    "next": "16.2.9",
-    "next-auth": "^5.0.0-beta.31",
-    "nodemailer": "^7.0.13",
+    "next": "^16.4.0",
+    "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^10.1.0",
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "react": "19.2.4",
@@ -46,7 +45,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "^16.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
@@ -56,5 +55,8 @@
     "sharp@0.34.5": true,
     "unrs-resolver@1.12.2": true,
     "esbuild@0.28.1": true
+  },
+  "overrides": {
+    "nodemailer": "$nodemailer"
   }
 }
