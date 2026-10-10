@@ -16,48 +16,6 @@ Welcome to **VinylApp**! This file serves as the primary guidance document for G
 
 ---
 
-## 2. Tech Stack & Architecture
-
-- **Language**: TypeScript / JavaScript
-- **Frontend Framework**: React / Next.js (App Router)
-- **Styling**: Tailwind CSS, Lucide Icons, UI Primitives (Shadcn UI / Radix)
-- **State Management**: TanStack Query (React Query) for async server state, Zustand/React Context for client state
-- **Database & ORM**: SQLite / PostgreSQL with Prisma or Drizzle ORM
-- **API Integrations**:
-  - Discogs REST API (Authentication: OAuth 1.0a / Personal Access Token)
-  - MusicBrainz API
-  - Spotify Web API
-- **Testing**: Jest / Vitest, React Testing Library, Playwright for E2E
-
----
-
-## 3. Directory Structure
-
-```
-VinylApp/
-├── src/
-│   ├── app/                 # Next.js App Router pages and API routes
-│   │   ├── api/             # Backend API endpoints (Discogs proxy, Collection endpoints)
-│   │   ├── collection/      # Collection view & management pages
-│   │   ├── wishlist/        # Wantlist pages
-│   │   └── search/          # Release search & import routes
-│   ├── components/          # React components
-│   │   ├── ui/              # Base UI primitives (Button, Modal, Card, Badge)
-│   │   ├── vinyl/           # Vinyl-specific UI (RecordCard, SleeveViewer, MatrixInput)
-│   │   └── layout/          # Header, Navigation, Sidebar, Footer
-│   ├── lib/                 # Core utilities & API abstractions
-│   │   ├── discogs/         # Discogs API client, rate limiting, and normalizers
-│   │   ├── db/              # Database models, schema, and queries
-│   │   └── grading/         # Vinyl condition grading helper logic
-│   ├── hooks/               # Custom React hooks (useVinylSearch, useCollection)
-│   └── types/               # TypeScript interfaces & domain types
-├── tests/                   # Unit & Integration tests
-├── .github/                 # GitHub workflows & Copilot configuration
-└── public/                  # Static assets & placeholder images
-```
-
----
-
 ## 4. Coding Standards & Guidelines for AI Agents
 
 ### TypeScript & Code Structure
@@ -97,27 +55,7 @@ Use these exact enum values and descriptions when handling vinyl item condition:
 
 ## 6. Useful Workflows & CLI Commands
 
-```bash
-# Install dependencies
-npm install
-
-# Run dev server
-npm run dev
-
-# Run linter
-npm run lint
-
-# Production build (prisma generate + next build)
-npm run build
-
-# Push schema changes to the database (no migrations folder; don't use db:migrate)
-npm run db:push
-
-# Create or promote an ADMIN user
-npm run create-user -- <email> <password>
-```
-
-There is no test runner or formatter script yet.
+Commands are listed in `CLAUDE.md` and `package.json`. There is no test runner or formatter script yet.
 
 ---
 

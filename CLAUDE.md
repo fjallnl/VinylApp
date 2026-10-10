@@ -18,23 +18,9 @@ npm run db:push      # Push schema changes to DB without migrations (preferred o
 npm run create-user  # npx tsx scripts/create-user.ts <email> <password> — creates/promotes an ADMIN user
 ```
 
-Local dev requires Docker containers for Postgres and MinIO:
-```bash
-docker run -d --name vinyl-postgres -e POSTGRES_USER=vinyluser -e POSTGRES_PASSWORD=vinylpass -e POSTGRES_DB=vinyldb -p 5432:5432 postgres:16
-docker run -d --name vinyl-minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin -p 9000:9000 -p 9001:9001 quay.io/minio/minio server /data --console-address ":9001"
-# Then set vinyl-covers bucket public:
-docker exec -it vinyl-minio mc alias set local http://localhost:9000 minioadmin minioadmin
-docker exec -it vinyl-minio mc anonymous set public local/vinyl-covers
-```
-
-Full stack in Docker (app + Postgres + MinIO):
-```bash
-docker compose up -d --build   # app container runs prisma db push on start
-```
+Local dev requires Docker containers for Postgres and MinIO — see the `dev-environment` skill for setup and the full Docker Compose stack.
 
 ## Architecture
-
-**Stack:** Next.js 16 App Router · TypeScript · Tailwind CSS v4 · Prisma 7 · NextAuth v5 (beta) · MinIO (S3-compatible) · PostgreSQL 16
 
 ### Key architectural constraints
 
@@ -42,6 +28,7 @@ docker compose up -d --build   # app container runs prisma db push on start
 - No `url` field in `prisma/schema.prisma` datasource block — URL lives in `prisma.config.ts` (auto-generated, not committed).
 - Requires `previewFeatures = ["driverAdapters"]` and `PrismaPg` adapter from `@prisma/adapter-pg`. Every place that instantiates `PrismaClient` (including `scripts/create-user.ts`) must pass the adapter.
 - Use `npm run db:push` (not migrate) — there is no migrations folder.
+- `scripts/create-user.ts` must import `dotenv/config`.
 
 **NextAuth v5 + Edge runtime split:**
 - `src/lib/auth.config.ts` — edge-safe config only (no Node.js modules). Used by middleware.
@@ -71,59 +58,7 @@ docker compose up -d --build   # app container runs prisma db push on start
 
 **Deployment:**
 - Serverless (e.g. Vercel): no in-memory state survives across requests/instances (the rate limiter is per instance), the build does not run `prisma db push` (run it manually against the target `DATABASE_URL`), and Production and Preview use separate env vars, database and bucket. For Cloudflare R2, `S3_FORCE_PATH_STYLE` auto-switches to `false` based on the `.r2.cloudflarestorage.com` endpoint.
-- Docker Compose runs postgres, minio, minio-init, and app containers. The app container runs `prisma db push` then `node server.js` on startup. `nginx/vinyl-app.conf` is an optional reverse-proxy example (`/covers/` → `http://localhost:9000/vinyl-covers/`).
-- `S3_ENDPOINT` inside Docker uses the internal service name (`http://minio:9000`); `NEXT_PUBLIC_S3_PUBLIC_URL` uses the public URL.
 - The `app` service in `docker-compose.yml` uses an explicit `environment:` list (no `env_file`). It currently doesn't forward `SMTP2GO_*`, `SMTP_FROM`, `APP_BASE_URL` or `EMAIL_VERIFICATION_*`, so they must be added there for verification emails to work in Docker.
-
-### File layout
-
-```
-src/
-  app/
-    (app)/          # Authenticated route group — layout wraps with Nav
-      collection/   # Grid + carousel view, search
-      record/[id]/  # Detail, edit, delete
-      wantlist/     # Wantlist CRUD
-      add/          # Add record form
-      admin/        # User management (admin role only)
-    api/
-      auth/         # NextAuth handler
-      admin/users/  # Admin-only user CRUD (list/create, role/password/delete)
-      register/     # Public self-registration endpoint + verify/ and resend/ email verification
-      records/      # CRUD + bulk-delete
-      wantlist/     # CRUD
-      discogs/      # search, release/[id], barcode — proxies Discogs REST API
-      upload-url/   # Returns S3 presigned PUT URL for direct client upload
-      proxy-image/  # Server-side proxy for Discogs images (avoids hotlink block)
-    login/
-    register/       # Public self-registration page; verify/ handles the email link
-  lib/
-    auth.config.ts  # Edge-safe NextAuth config
-    auth.ts         # Full NextAuth config
-    prisma.ts       # PrismaClient singleton with PrismaPg adapter
-    s3.ts           # S3Client, coverUrl(), getUploadUrl(), deleteObject()
-    cover.ts        # downloadCoverToMinio() — fetches Discogs URL and uploads to MinIO
-    discogs.ts      # Discogs API helpers
-    mailer.ts       # nodemailer/SMTP2GO transport, verification email, getAppBaseUrl()
-    email-verification.ts  # Token issue/verify (hashed, single-use, TTL + resend cooldown)
-    rate-limit.ts   # In-memory per-process rate limiter for register/resend/verify
-    utils.ts        # cn(), CONDITIONS array
-  components/
-    RecordForm.tsx      # Add/edit form — Discogs search, barcode scan, cover upload
-    CollectionGrid.tsx  # Grid view with multi-select bulk delete
-    CollectionCarousel.tsx  # 3D coverflow carousel with blurred bg
-    CollectionView.tsx  # Toggle wrapper between grid and carousel
-    BarcodeScanner.tsx  # @zxing/library camera barcode scanner
-    UserAdmin.tsx       # Admin user management UI (add, role, password reset, delete)
-    Nav.tsx             # Shows Users link for admins only
-  types/
-    next-auth.d.ts  # Session type augmentation (user.id, user.role)
-  proxy.ts          # Route protection using edge-safe auth config
-prisma/
-  schema.prisma
-scripts/
-  create-user.ts    # One-time user creation (must import dotenv/config)
-```
 
 ### Design
 
