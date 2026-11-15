@@ -32,13 +32,18 @@ export function coverUrl(key: string) {
   return `${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${key}`;
 }
 
-export async function getUploadUrl(key: string, contentType: string) {
+export async function getUploadUrl(key: string, contentType: string, contentLength: number) {
   const cmd = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
+    ContentLength: contentLength,
   });
-  return getSignedUrl(s3, cmd, { expiresIn: 300 });
+  // Sign type and size so the client can only PUT exactly the file it announced.
+  return getSignedUrl(s3, cmd, {
+    expiresIn: 300,
+    signableHeaders: new Set(["content-type", "content-length"]),
+  });
 }
 
 export async function deleteObject(key: string) {

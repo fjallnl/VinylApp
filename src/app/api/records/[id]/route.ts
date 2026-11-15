@@ -2,8 +2,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { deleteObject } from "@/lib/s3";
-import { downloadCoverToMinio } from "@/lib/cover";
+import { deleteUnreferencedCovers, downloadDiscogsCover } from "@/lib/cover";
+import { isAllowedCoverKey } from "@/lib/cover-key";
+import { isDiscogsImageUrl } from "@/lib/discogs";
 
 const schema = z.object({
   title: z.string().min(1),
@@ -17,7 +18,7 @@ const schema = z.object({
   notes: z.string().optional().nullable(),
   discogsId: z.string().optional().nullable().transform(v => v?.trim() || null),
   coverImage: z.string().optional().nullable(),
-  discogsCoverUrl: z.string().url().optional().nullable(),
+  discogsCoverUrl: z.string().refine(isDiscogsImageUrl, "Must be a Discogs image URL").optional().nullable(),
   rating: z.number().int().min(1).max(5).optional().nullable(),
   mediaCondition: z.string().optional().nullable(),
   sleeveCondition: z.string().optional().nullable(),
@@ -43,9 +44,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { tracks, discogsCoverUrl, ...data } = parsed.data;
 
+  if (!isAllowedCoverKey(data.coverImage, session.user.id, existing.coverImage)) {
+    return NextResponse.json({ error: "Invalid cover image" }, { status: 400 });
+  }
+
   if (discogsCoverUrl && !data.coverImage) {
     try {
-      data.coverImage = await downloadCoverToMinio(discogsCoverUrl);
+      data.coverImage = await downloadDiscogsCover(discogsCoverUrl, session.user.id);
     } catch (error) {
       console.error("Failed to import Discogs cover", error);
       return NextResponse.json({ error: "Failed to import cover image from Discogs" }, { status: 502 });
@@ -69,6 +74,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       tracks: { deleteMany: {}, create: tracks },
     },
   });
+
+  if (existing.coverImage && existing.coverImage !== record.coverImage) {
+    await deleteUnreferencedCovers([existing.coverImage]);
+  }
 
   return NextResponse.json(record);
 }
@@ -102,10 +111,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const record = await prisma.record.findFirst({ where: { id, userId: session.user.id } });
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (record.coverImage) {
-    await deleteObject(record.coverImage).catch(() => {});
-  }
-
   await prisma.record.delete({ where: { id } });
+  await deleteUnreferencedCovers([record.coverImage]);
   return new NextResponse(null, { status: 204 });
 }

@@ -50,11 +50,15 @@ Local dev requires Docker containers for Postgres and MinIO — see the `dev-env
 - Register/resend/verify are rate-limited per IP and per email by `src/lib/rate-limit.ts` — an in-memory, per-process store (resets on restart). Limits come from the `EMAIL_VERIFICATION_*_LIMIT` / `*_WINDOW_SECONDS` env vars (see `.env.example`); `EMAIL_VERIFICATION_RATE_LIMIT_DISABLED=true` turns it off.
 
 **Image handling:**
-- Cover images are stored in MinIO under keys like `1712345678901.jpg` (timestamp + ext, no path prefix).
+- Cover keys are `<userId>/<uuid>.<ext>` (jpg/png/webp only), always generated server-side by `newCoverKey()` in `src/lib/cover-key.ts`. Older covers use legacy keys like `1712345678901.jpg`; these keep working but are never generated anymore.
+- `/api/upload-url?type=&size=` returns `{ url, key }`: a presigned PUT with content-type and content-length signed (max 10 MB, `MAX_COVER_BYTES`).
+- Records POST/PUT only accept a `coverImage` the user owns (`<their id>/…`) or the record's unchanged current key (`isAllowedCoverKey`).
+- Cover objects are only deleted via `deleteUnreferencedCovers()` in `src/lib/cover.ts`, after the referencing records are deleted/updated, so a key still used by another record is never removed. Replacing a cover on PUT cleans up the old one.
 - `NEXT_PUBLIC_S3_PUBLIC_URL` (must be `NEXT_PUBLIC_` prefixed) is the public base URL for covers. `coverUrl(key)` in `src/lib/s3.ts` constructs the full URL.
 - All `<Image>` components rendering covers or Discogs thumbnails use `unoptimized` — Next.js image optimization is bypassed because the optimizer fetches source URLs server-side, which fails for MinIO (private network) and Discogs (blocks server requests).
 - Discogs thumbnails in search results are proxied through `/api/proxy-image?url=` to avoid browser-level hotlink blocking.
-- When a record is saved with a Discogs cover URL (`discogsCoverUrl` in the payload), the API route downloads it to MinIO server-side via `src/lib/cover.ts`.
+- When a record is saved with a Discogs cover URL (`discogsCoverUrl` in the payload), the API route downloads it server-side via `downloadDiscogsCover()` in `src/lib/cover.ts`: https on `DISCOGS_IMAGE_HOSTS` only (shared with `proxy-image`, in `src/lib/discogs.ts`), no redirects, 10 s timeout, size cap, and the stored content type comes from the image's magic bytes.
+- In production the cover hostname sends `X-Content-Type-Options: nosniff` and `Content-Security-Policy: default-src 'none'; sandbox` (Cloudflare Transform Rule), and the bucket's CORS only allows the app origin.
 
 **Deployment:**
 - Serverless (e.g. Vercel): no in-memory state survives across requests/instances (the rate limiter is per instance), the build does not run `prisma db push` (run it manually against the target `DATABASE_URL`), and Production and Preview use separate env vars, database and bucket. For Cloudflare R2, `S3_FORCE_PATH_STYLE` auto-switches to `false` based on the `.r2.cloudflarestorage.com` endpoint.

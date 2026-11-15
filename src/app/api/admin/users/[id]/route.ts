@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { deleteObject } from "@/lib/s3";
+import { deleteUnreferencedCovers } from "@/lib/cover";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional().nullable(),
@@ -57,13 +57,14 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Clean up this user's cover images in MinIO before the cascade delete
+  // Collect this user's cover keys; once the cascade delete removed their records,
+  // delete the objects no other record still points at
   const records = await prisma.record.findMany({
     where: { userId: id, coverImage: { not: null } },
     select: { coverImage: true },
   });
-  await Promise.all(records.map((r) => deleteObject(r.coverImage!).catch(() => {})));
 
   await prisma.user.delete({ where: { id } });
+  await deleteUnreferencedCovers(records.map((r) => r.coverImage));
   return new NextResponse(null, { status: 204 });
 }

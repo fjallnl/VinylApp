@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { deleteObject } from "@/lib/s3";
+import { deleteUnreferencedCovers } from "@/lib/cover";
 
 const schema = z.object({
   ids: z.array(z.string().min(1)),
@@ -31,17 +31,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Some records not found or unauthorized" }, { status: 403 });
   }
 
-  // Delete cover images from S3
-  for (const record of records) {
-    if (record.coverImage) {
-      try {
-        await deleteObject(record.coverImage);
-      } catch (error) {
-        console.error(`Failed to delete cover image: ${record.coverImage}`, error);
-      }
-    }
-  }
-
   // Delete records from database
   await prisma.record.deleteMany({
     where: {
@@ -49,6 +38,9 @@ export async function POST(req: Request) {
       userId: session.user.id,
     },
   });
+
+  // Delete cover images no other record still points at
+  await deleteUnreferencedCovers(records.map((r) => r.coverImage));
 
   return NextResponse.json({ success: true, deleted: ids.length });
 }
