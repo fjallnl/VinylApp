@@ -25,7 +25,7 @@
     "@zxing/library": "^0.23.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.10",
     "lucide-react": "^1.74.0",
     "next": "^16.4.6",
     "next-auth": "^5.0.0-beta.32",
