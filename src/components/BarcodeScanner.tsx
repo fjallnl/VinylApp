@@ -18,7 +18,7 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
     readerRef.current = reader;
-    setCameraError(null);
+    const video = videoRef.current!;
     onError?.(null);
 
     const startScanner = async () => {
@@ -37,7 +37,7 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
       };
 
       try {
-        await reader.decodeFromConstraints(constraints, videoRef.current!, (result) => {
+        await reader.decodeFromConstraints(constraints, video, (result) => {
           if (result) {
             onDetected(result.getText());
           }
@@ -54,9 +54,9 @@ export default function BarcodeScanner({ onDetected, onError }: BarcodeScannerPr
 
     return () => {
       reader.reset();
-      if (videoRef.current?.srcObject instanceof MediaStream) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-        videoRef.current.srcObject = null;
+      if (video.srcObject instanceof MediaStream) {
+        video.srcObject.getTracks().forEach((track) => track.stop());
+        video.srcObject = null;
       }
     };
   }, [onDetected, onError]);

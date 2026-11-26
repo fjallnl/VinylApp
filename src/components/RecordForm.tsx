@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Camera, Barcode, Loader2, X, Star, Upload, Disc3 } from "lucide-react";
+import { Search, Barcode, Loader2, X, Star, Upload, Disc3 } from "lucide-react";
 import { cn, CONDITIONS } from "@/lib/utils";
 import BarcodeScanner from "./BarcodeScanner";
 import Image from "next/image";
@@ -88,7 +88,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
       const res = await fetch(`/api/genres?q=${encodeURIComponent(q)}`);
       const data = await res.json().catch(() => []);
       if (!mounted) return;
-      const names = (data || []).map((g: any) => g.name).filter(Boolean).filter((n: string) => !genreTags.includes(n));
+      const names = (data || []).map((g: { name: string }) => g.name).filter(Boolean).filter((n: string) => !genreTags.includes(n));
       setGenreSuggestions(names);
     };
     const t = setTimeout(fetchSuggestions, 200);
@@ -143,14 +143,24 @@ export default function RecordForm({ record }: { record?: RecordData }) {
     setValue("genre", genreTags.join(", "));
   }, [genreTags, setValue]);
 
-  async function searchDiscogs(query: string) {
+  const resetSearch = useCallback(() => {
+    searchAbortRef.current?.abort();
+    setSearchResults([]);
+    setSearching(false);
+    setSearchError(null);
+    setSearchRateLimitedUntil(null);
+    setHasSearched(false);
+  }, []);
+
+  function handleSearchQueryChange(value: string) {
+    setSearchQuery(value);
+    if (value.trim().length < 3) resetSearch();
+  }
+
+  const searchDiscogs = useCallback(async (query: string) => {
     const normalized = query.trim();
     if (normalized.length < 3) {
-      setSearchResults([]);
-      setSearching(false);
-      setSearchError(null);
-      setSearchRateLimitedUntil(null);
-      setHasSearched(false);
+      resetSearch();
       return;
     }
 
@@ -194,19 +204,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         setSearching(false);
       }
     }
-  }
+  }, [resetSearch]);
 
   useEffect(() => {
     const q = searchQuery.trim();
-    if (q.length < 3) {
-      setSearchResults([]);
-      setSearching(false);
-      setSearchError(null);
-      setSearchRateLimitedUntil(null);
-      setHasSearched(false);
-      searchAbortRef.current?.abort();
-      return;
-    }
+    if (q.length < 3) return;
 
     const rateLimitedRemainingMs = searchRateLimitedUntil ? searchRateLimitedUntil - Date.now() : 0;
     if (rateLimitedRemainingMs > 0) return;
@@ -216,15 +218,11 @@ export default function RecordForm({ record }: { record?: RecordData }) {
     }, 450);
 
     return () => clearTimeout(timeout);
-  }, [searchQuery, searchRateLimitedUntil]);
+  }, [searchQuery, searchRateLimitedUntil, searchDiscogs]);
 
   useEffect(() => {
     if (!searchRateLimitedUntil) return;
-    const remainingMs = searchRateLimitedUntil - Date.now();
-    if (remainingMs <= 0) {
-      setSearchRateLimitedUntil(null);
-      return;
-    }
+    const remainingMs = Math.max(0, searchRateLimitedUntil - Date.now());
 
     const timeout = setTimeout(() => {
       setSearchRateLimitedUntil(null);
@@ -294,15 +292,6 @@ export default function RecordForm({ record }: { record?: RecordData }) {
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
     setDiscogsCoverUrl(null);
-  }
-
-  function getNextSide(trackList: Track[]): string {
-    if (trackList.length === 0) return "A";
-    const sides = trackList.map((t) => t.position?.[0]?.toUpperCase() || "A");
-    const lastSide = sides[sides.length - 1];
-    const sideOrder = ["A", "B", "C", "D"];
-    const currentIndex = sideOrder.indexOf(lastSide);
-    return currentIndex < 3 ? sideOrder[currentIndex + 1] : lastSide;
   }
 
   function getNextTrackNumber(trackList: Track[], side: string): number {
@@ -385,7 +374,7 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         <div className="flex gap-2">
           <input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchQueryChange(e.target.value)}
             onFocus={() => {
               if (showScanner) {
                 setShowScanner(false);
@@ -674,7 +663,6 @@ export default function RecordForm({ record }: { record?: RecordData }) {
         </div>
         {tracks.map((track, i) => {
           const currentSide = track.position?.[0]?.toUpperCase() || "A";
-          const tracksOnSide = tracks.filter((t) => t.position?.[0]?.toUpperCase() === currentSide).length;
           return (
             <div key={i} className="flex gap-2 mb-2 items-center">
               <div className="flex gap-1 shrink-0">

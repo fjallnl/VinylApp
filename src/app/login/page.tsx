@@ -2,11 +2,12 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Disc3, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
@@ -33,7 +34,7 @@ export default function LoginPage() {
         setError("Invalid email or password");
       }
     } else {
-      window.location.href = "/collection";
+      router.push("/collection");
     }
   }
 

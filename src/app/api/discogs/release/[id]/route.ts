@@ -29,7 +29,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         duration: t.duration,
       })),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Discogs unavailable" }, { status: 502 });
   }
 }
