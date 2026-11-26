@@ -10,7 +10,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   try {
     await prisma.genre.delete({ where: { id } });
     return new NextResponse(null, { status: 204 });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 }

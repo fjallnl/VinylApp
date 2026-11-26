@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   try {
     const results = await searchDiscogsBarcode(code);
     return NextResponse.json({ results });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Discogs unavailable" }, { status: 502 });
   }
 }

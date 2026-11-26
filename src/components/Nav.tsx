@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Disc3, Heart, PlusCircle, LogOut, Menu, X, GalleryHorizontal, Users, Settings, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Disc3, Heart, PlusCircle, LogOut, Menu, X, Users, Settings, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
